@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Stats · Chess Trainer</title>
+  <meta name="description" content="Your puzzle, opening and bot statistics.">
+  <meta name="theme-color" content="#0e1013">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="vendor/chess.js/chess.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="inner">
+      <a class="brand" href="index.html"><img src="img/favicon.svg" alt="" width="26" height="26"><span>Chess Trainer</span></a>
+      <nav class="nav" aria-label="Main"><a href="index.html">Home</a><a href="puzzles.html">Puzzles</a><a href="openings.html">Openings</a><a href="play.html">Play</a><a href="stats.html" aria-current="page">Stats</a></nav>
+    </div>
+  </header>
+  <main>
+    <h1>Your stats</h1>
+    <p class="muted">Everything here is stored locally in this browser.</p>
+    <section class="section">
+      <h2>Puzzles</h2>
+      <div class="stat-grid" id="puzzle-stats"></div>
+      <div class="panel" style="margin-top:12px">
+        <h3>Rating history</h3>
+        <div id="rating-chart"></div>
+      </div>
+      <div class="panel table-scroll" style="margin-top:12px">
+        <h3>Accuracy by theme</h3>
+        <table class="tbl" id="theme-table"></table>
+      </div>
+    </section>
+    <section class="section">
+      <h2>Play vs Bot</h2>
+      <div class="stat-grid" id="bot-stats"></div>
+      <div class="panel table-scroll" style="margin-top:12px">
+        <h3>Record by level</h3>
+        <table class="tbl" id="bot-table"></table>
+      </div>
+    </section>
+    <section class="section">
+      <h2>Openings</h2>
+      <div class="panel table-scroll">
+        <table class="tbl" id="opening-table"></table>
+      </div>
+    </section>
+    <section class="section">
+      <h2>Reset</h2>
+      <div class="btn-row" style="max-width:560px">
+        <button class="btn danger" data-reset="puzzles">Reset puzzles</button>
+        <button class="btn danger" data-reset="openings">Reset openings</button>
+        <button class="btn danger" data-reset="bot">Reset bot record</button>
+      </div>
+    </section>
+  </main>
+  <footer class="site">Chess Trainer · Engine: Stockfish 17.1 (GPLv3) · Progress is saved in this browser only.</footer>
+  <script type="module" src="js/stats.js"></script>
+</body>
+</html>

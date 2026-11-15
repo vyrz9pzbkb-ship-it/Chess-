@@ -1,0 +1,817 @@
+[
+ {
+  "id": "p049",
+  "fen": "rnbqkb1r/pppp1ppp/5n2/4p2Q/4P3/8/PPPP1PPP/RNB1KBNR b KQkq - 3 3",
+  "moves": [
+   "f6h5"
+  ],
+  "san": [
+   "Nxh5"
+  ],
+  "theme": "hanging",
+  "rating": 400,
+  "title": "Free queen"
+ },
+ {
+  "id": "p051",
+  "fen": "rnbqkbnr/ppp2ppp/3p4/4p3/3QP3/8/PPP2PPP/RNB1KBNR b KQkq - 1 3",
+  "moves": [
+   "e5d4"
+  ],
+  "san": [
+   "exd4"
+  ],
+  "theme": "hanging",
+  "rating": 400,
+  "title": "Queen in the centre"
+ },
+ {
+  "id": "p007",
+  "fen": "rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq - 0 2",
+  "moves": [
+   "d8h4"
+  ],
+  "san": [
+   "Qh4#"
+  ],
+  "theme": "mateIn1",
+  "rating": 450,
+  "title": "Fool's mate"
+ },
+ {
+  "id": "p018",
+  "fen": "4k3/8/4K3/8/8/8/8/7R w - - 0 1",
+  "moves": [
+   "h1h8"
+  ],
+  "san": [
+   "Rh8#"
+  ],
+  "theme": "mateIn1",
+  "rating": 450,
+  "title": "Opposition mate"
+ },
+ {
+  "id": "p045",
+  "fen": "rnb1kbnr/pppp1ppp/8/4p3/4P2q/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
+  "moves": [
+   "f3h4"
+  ],
+  "san": [
+   "Nxh4"
+  ],
+  "theme": "hanging",
+  "rating": 450,
+  "title": "Early queen raid"
+ },
+ {
+  "id": "p001",
+  "fen": "6k1/5ppp/8/8/8/8/5PPP/3R2K1 w - - 0 1",
+  "moves": [
+   "d1d8"
+  ],
+  "san": [
+   "Rd8#"
+  ],
+  "theme": "mateIn1",
+  "rating": 500,
+  "title": "Back-rank weakness"
+ },
+ {
+  "id": "p005",
+  "fen": "6k1/R7/8/8/8/8/8/1R4K1 w - - 0 1",
+  "moves": [
+   "b1b8"
+  ],
+  "san": [
+   "Rb8#"
+  ],
+  "theme": "mateIn1",
+  "rating": 500,
+  "title": "Ladder mate"
+ },
+ {
+  "id": "p008",
+  "fen": "3r2k1/5ppp/8/8/8/8/5PPP/6K1 b - - 0 1",
+  "moves": [
+   "d8d1"
+  ],
+  "san": [
+   "Rd1#"
+  ],
+  "theme": "mateIn1",
+  "rating": 500,
+  "title": "Back rank, Black to play"
+ },
+ {
+  "id": "p019",
+  "fen": "7k/6p1/6K1/8/8/8/8/R7 w - - 0 1",
+  "moves": [
+   "a1a8"
+  ],
+  "san": [
+   "Ra8#"
+  ],
+  "theme": "mateIn1",
+  "rating": 500,
+  "title": "Corridor mate"
+ },
+ {
+  "id": "p046",
+  "fen": "r1bqkb1r/pppp1ppp/5n2/4n3/4P3/2N2N2/PPPP1PPP/R1BQKB1R w KQkq - 0 5",
+  "moves": [
+   "f3e5"
+  ],
+  "san": [
+   "Nxe5"
+  ],
+  "theme": "hanging",
+  "rating": 500,
+  "title": "Loose knight"
+ },
+ {
+  "id": "p002",
+  "fen": "r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4",
+  "moves": [
+   "h5f7"
+  ],
+  "san": [
+   "Qxf7#"
+  ],
+  "theme": "mateIn1",
+  "rating": 550,
+  "title": "Scholar's mate"
+ },
+ {
+  "id": "p016",
+  "fen": "6k1/5ppp/8/8/3q4/8/5PPP/6K1 b - - 0 1",
+  "moves": [
+   "d4d1"
+  ],
+  "san": [
+   "Qd1#"
+  ],
+  "theme": "mateIn1",
+  "rating": 550,
+  "title": "Queen to the back rank"
+ },
+ {
+  "id": "p048",
+  "fen": "rnbqkbnr/ppp2ppp/3p4/4p1B1/4P3/3P4/PPP2PPP/RN1QKBNR b KQkq - 1 3",
+  "moves": [
+   "d8g5"
+  ],
+  "san": [
+   "Qxg5"
+  ],
+  "theme": "hanging",
+  "rating": 550,
+  "title": "Undefended bishop"
+ },
+ {
+  "id": "p015",
+  "fen": "k7/2P5/1K6/8/8/8/8/8 w - - 0 1",
+  "moves": [
+   "c7c8q"
+  ],
+  "san": [
+   "c8=Q#"
+  ],
+  "theme": "mateIn1",
+  "rating": 600,
+  "title": "Promote with mate"
+ },
+ {
+  "id": "p017",
+  "fen": "7K/8/6k1/8/8/8/8/1q6 b - - 0 1",
+  "moves": [
+   "b1b8"
+  ],
+  "san": [
+   "Qb8#"
+  ],
+  "theme": "mateIn1",
+  "rating": 600,
+  "title": "King and queen mate"
+ },
+ {
+  "id": "p047",
+  "fen": "rnbqkbnr/p2ppppp/1p6/2p5/8/6P1/PPPPPPBP/RNBQK1NR w KQkq - 0 3",
+  "moves": [
+   "g2a8"
+  ],
+  "san": [
+   "Bxa8"
+  ],
+  "theme": "hanging",
+  "rating": 600,
+  "title": "Open long diagonal"
+ },
+ {
+  "id": "p013",
+  "fen": "k7/7p/1Q6/8/8/8/8/1R4K1 w - - 0 1",
+  "moves": [
+   "b6b7"
+  ],
+  "san": [
+   "Qb7#"
+  ],
+  "theme": "mateIn1",
+  "rating": 650,
+  "title": "Supported queen"
+ },
+ {
+  "id": "p050",
+  "fen": "2r3k1/pp3ppp/2n5/3b4/8/2N2N2/PP3PPP/2R3K1 w - - 0 1",
+  "moves": [
+   "c3d5"
+  ],
+  "san": [
+   "Nxd5"
+  ],
+  "theme": "hanging",
+  "rating": 650,
+  "title": "Count the defenders"
+ },
+ {
+  "id": "p003",
+  "fen": "6rk/6pp/8/6N1/8/8/8/6K1 w - - 0 1",
+  "moves": [
+   "g5f7"
+  ],
+  "san": [
+   "Nf7#"
+  ],
+  "theme": "mateIn1",
+  "rating": 700,
+  "title": "Smothered mate"
+ },
+ {
+  "id": "p009",
+  "fen": "5r1k/6pp/8/6NQ/8/8/6PP/6K1 w - - 0 1",
+  "moves": [
+   "h5h7"
+  ],
+  "san": [
+   "Qxh7#"
+  ],
+  "theme": "mateIn1",
+  "rating": 700,
+  "title": "Queen and knight on h7"
+ },
+ {
+  "id": "p012",
+  "fen": "6k1/8/8/8/4n3/8/6PP/6RK b - - 0 1",
+  "moves": [
+   "e4f2"
+  ],
+  "san": [
+   "Nf2#"
+  ],
+  "theme": "mateIn1",
+  "rating": 700,
+  "title": "Smothered mate, Black to play"
+ },
+ {
+  "id": "p004",
+  "fen": "7k/7p/5N2/8/8/8/8/6RK w - - 0 1",
+  "moves": [
+   "g1g8"
+  ],
+  "san": [
+   "Rg8#"
+  ],
+  "theme": "mateIn1",
+  "rating": 750,
+  "title": "Rook and knight"
+ },
+ {
+  "id": "p010",
+  "fen": "5rk1/5p2/6P1/8/8/8/8/4K2Q w - - 0 1",
+  "moves": [
+   "h1h7"
+  ],
+  "san": [
+   "Qh7#"
+  ],
+  "theme": "mateIn1",
+  "rating": 750,
+  "title": "Damiano's mate"
+ },
+ {
+  "id": "p006",
+  "fen": "6k1/5p1p/6p1/8/3Q4/8/1B3PPP/6K1 w - - 0 1",
+  "moves": [
+   "d4g7"
+  ],
+  "san": [
+   "Qg7#"
+  ],
+  "theme": "mateIn1",
+  "rating": 800,
+  "title": "Battery on the long diagonal"
+ },
+ {
+  "id": "p011",
+  "fen": "6k1/5p1p/5Bp1/8/8/8/5PPP/3Q2K1 w - - 0 1",
+  "moves": [
+   "d1d8"
+  ],
+  "san": [
+   "Qd8#"
+  ],
+  "theme": "mateIn1",
+  "rating": 850,
+  "title": "Bishop holds the dark squares"
+ },
+ {
+  "id": "p031",
+  "fen": "2q3k1/5ppp/8/5N2/8/8/5PPP/6K1 w - - 0 1",
+  "moves": [
+   "f5e7",
+   "g8f8",
+   "e7c8"
+  ],
+  "san": [
+   "Ne7+",
+   "Kf8",
+   "Nxc8"
+  ],
+  "theme": "fork",
+  "rating": 850,
+  "title": "Knight check, queen falls"
+ },
+ {
+  "id": "p014",
+  "fen": "3rkr2/p7/8/8/2Q5/8/8/6K1 w - - 0 1",
+  "moves": [
+   "c4e6"
+  ],
+  "san": [
+   "Qe6#"
+  ],
+  "theme": "mateIn1",
+  "rating": 900,
+  "title": "Epaulette mate"
+ },
+ {
+  "id": "p030",
+  "fen": "8/5pp1/5k1r/8/6PP/8/5K2/R7 w - - 0 1",
+  "moves": [
+   "g4g5"
+  ],
+  "san": [
+   "g5+"
+  ],
+  "theme": "fork",
+  "rating": 900,
+  "title": "Pawn fork"
+ },
+ {
+  "id": "p034",
+  "fen": "6k1/5ppp/8/8/5n2/8/5PPP/2Q3K1 b - - 0 1",
+  "moves": [
+   "f4e2",
+   "g1f1",
+   "e2c1"
+  ],
+  "san": [
+   "Ne2+",
+   "Kf1",
+   "Nxc1"
+  ],
+  "theme": "fork",
+  "rating": 900,
+  "title": "Knight fork, Black to play"
+ },
+ {
+  "id": "p029",
+  "fen": "r3k2r/pp3ppp/2n1q3/3N4/8/8/PPP1PPPP/R2QK2R w KQkq - 0 1",
+  "moves": [
+   "d5c7"
+  ],
+  "san": [
+   "Nc7+"
+  ],
+  "theme": "fork",
+  "rating": 950,
+  "title": "Family fork"
+ },
+ {
+  "id": "p054",
+  "fen": "4k3/pp3ppp/8/8/r7/8/PP3PPP/4KB2 w - - 0 1",
+  "moves": [
+   "f1b5",
+   "e8d8",
+   "b5a4"
+  ],
+  "san": [
+   "Bb5+",
+   "Kd8",
+   "Bxa4"
+  ],
+  "theme": "fork",
+  "rating": 950,
+  "title": "Bishop fork"
+ },
+ {
+  "id": "p036",
+  "fen": "4k3/pp1q1ppp/8/8/8/2N5/PP3PPP/4KB2 w - - 0 1",
+  "moves": [
+   "f1b5",
+   "a7a6",
+   "b5d7"
+  ],
+  "san": [
+   "Bb5",
+   "a6",
+   "Bxd7+"
+  ],
+  "theme": "pin",
+  "rating": 1000,
+  "title": "Bishop pins the queen"
+ },
+ {
+  "id": "p040",
+  "fen": "8/6p1/8/r2k4/8/8/5PK1/7R w - - 0 1",
+  "moves": [
+   "h1h5",
+   "d5e6",
+   "h5a5"
+  ],
+  "san": [
+   "Rh5+",
+   "Ke6",
+   "Rxa5"
+  ],
+  "theme": "skewer",
+  "rating": 1000,
+  "title": "Rook skewer"
+ },
+ {
+  "id": "p055",
+  "fen": "1r6/4k3/8/pp6/8/R1K5/8/8 b - - 0 1",
+  "moves": [
+   "b5b4",
+   "c3b3",
+   "b4a3"
+  ],
+  "san": [
+   "b4+",
+   "Kb3",
+   "bxa3+"
+  ],
+  "theme": "fork",
+  "rating": 1000,
+  "title": "Pawn fork, Black to play"
+ },
+ {
+  "id": "p032",
+  "fen": "6k1/5pp1/7p/r7/8/8/5PPP/3Q2K1 w - - 0 1",
+  "moves": [
+   "d1d8",
+   "g8h7",
+   "d8a5"
+  ],
+  "san": [
+   "Qd8+",
+   "Kh7",
+   "Qxa5"
+  ],
+  "theme": "fork",
+  "rating": 1050,
+  "title": "Check and grab"
+ },
+ {
+  "id": "p039",
+  "fen": "4kb2/pp3ppp/2n5/8/8/8/PP1Q1PPP/4K3 b - - 0 1",
+  "moves": [
+   "f8b4",
+   "a2a3",
+   "b4d2"
+  ],
+  "san": [
+   "Bb4",
+   "a3",
+   "Bxd2+"
+  ],
+  "theme": "pin",
+  "rating": 1050,
+  "title": "Pin, Black to play"
+ },
+ {
+  "id": "p042",
+  "fen": "1q3k2/5pp1/8/8/8/8/5PP1/6KR w - - 0 1",
+  "moves": [
+   "h1h8",
+   "f8e7",
+   "h8b8"
+  ],
+  "san": [
+   "Rh8+",
+   "Ke7",
+   "Rxb8"
+  ],
+  "theme": "skewer",
+  "rating": 1050,
+  "title": "Skewer on the back rank"
+ },
+ {
+  "id": "p044",
+  "fen": "6kr/5pp1/8/8/8/8/5PP1/1Q3K2 b - - 0 1",
+  "moves": [
+   "h8h1",
+   "f1e2",
+   "h1b1"
+  ],
+  "san": [
+   "Rh1+",
+   "Ke2",
+   "Rxb1"
+  ],
+  "theme": "skewer",
+  "rating": 1050,
+  "title": "Skewer, Black to play"
+ },
+ {
+  "id": "p035",
+  "fen": "4k3/pp3ppp/4q3/8/8/8/PP3PPP/2BR1K2 w - - 0 1",
+  "moves": [
+   "d1e1",
+   "e6e1",
+   "f1e1"
+  ],
+  "san": [
+   "Re1",
+   "Qxe1+",
+   "Kxe1"
+  ],
+  "theme": "pin",
+  "rating": 1100,
+  "title": "Pin the queen"
+ },
+ {
+  "id": "p041",
+  "fen": "r7/5pp1/2k5/8/8/7B/5P1P/6K1 w - - 0 1",
+  "moves": [
+   "h3g2",
+   "c6d6",
+   "g2a8"
+  ],
+  "san": [
+   "Bg2+",
+   "Kd6",
+   "Bxa8"
+  ],
+  "theme": "skewer",
+  "rating": 1100,
+  "title": "Long-diagonal skewer"
+ },
+ {
+  "id": "p033",
+  "fen": "8/5pp1/8/3k3p/8/6P1/r3NP1P/6K1 w - - 0 1",
+  "moves": [
+   "e2c3",
+   "d5d4",
+   "c3a2"
+  ],
+  "san": [
+   "Nc3+",
+   "Kd4",
+   "Nxa2"
+  ],
+  "theme": "fork",
+  "rating": 1150,
+  "title": "Endgame knight fork"
+ },
+ {
+  "id": "p038",
+  "fen": "7k/6p1/8/7q/8/3R4/6PP/2B3K1 w - - 0 1",
+  "moves": [
+   "d3h3"
+  ],
+  "san": [
+   "Rh3"
+  ],
+  "theme": "pin",
+  "rating": 1150,
+  "title": "Pin on the h-file"
+ },
+ {
+  "id": "p043",
+  "fen": "4q3/pp1k1ppp/8/8/8/8/PP3PPP/R4BK1 w - - 0 1",
+  "moves": [
+   "f1b5"
+  ],
+  "san": [
+   "Bb5+"
+  ],
+  "theme": "skewer",
+  "rating": 1150,
+  "title": "Skewer the king and queen"
+ },
+ {
+  "id": "p022",
+  "fen": "3r2k1/5ppp/8/q7/8/8/4QPPP/4R1K1 w - - 0 1",
+  "moves": [
+   "e2e8",
+   "d8e8",
+   "e1e8"
+  ],
+  "san": [
+   "Qe8+",
+   "Rxe8",
+   "Rxe8#"
+  ],
+  "theme": "mateIn2",
+  "rating": 1200,
+  "title": "Deflect the defender"
+ },
+ {
+  "id": "p037",
+  "fen": "8/5pkp/5n2/8/6P1/8/1B3P1P/6K1 w - - 0 1",
+  "moves": [
+   "g4g5"
+  ],
+  "san": [
+   "g5"
+  ],
+  "theme": "pin",
+  "rating": 1200,
+  "title": "Attack the pinned piece"
+ },
+ {
+  "id": "p025",
+  "fen": "4r1k1/4qppp/8/8/Q7/8/5PPP/3R2K1 b - - 0 1",
+  "moves": [
+   "e7e1",
+   "d1e1",
+   "e8e1"
+  ],
+  "san": [
+   "Qe1+",
+   "Rxe1",
+   "Rxe1#"
+  ],
+  "theme": "mateIn2",
+  "rating": 1250,
+  "title": "Back rank, Black to play"
+ },
+ {
+  "id": "p027",
+  "fen": "r2qkbnr/ppp2ppp/2np4/4N3/2B1P3/2N5/PPPP1PPP/R1BbK2R w KQkq - 0 6",
+  "moves": [
+   "c4f7",
+   "e8e7",
+   "c3d5"
+  ],
+  "san": [
+   "Bxf7+",
+   "Ke7",
+   "Nd5#"
+  ],
+  "theme": "mateIn2",
+  "rating": 1300,
+  "title": "Légal's mate"
+ },
+ {
+  "id": "p052",
+  "fen": "4k3/1q3ppp/8/8/4N3/8/5PPP/4R1K1 w - - 0 1",
+  "moves": [
+   "e4d6",
+   "e8d7",
+   "d6b7"
+  ],
+  "san": [
+   "Nd6+",
+   "Kd7",
+   "Nxb7"
+  ],
+  "theme": "discovered",
+  "rating": 1300,
+  "title": "Double check wins the queen"
+ },
+ {
+  "id": "p053",
+  "fen": "5k1r/pp3p1p/8/8/3N4/8/PB3PPP/6K1 w - - 0 1",
+  "moves": [
+   "d4e6",
+   "f8e7",
+   "b2h8"
+  ],
+  "san": [
+   "Ne6+",
+   "Ke7",
+   "Bxh8"
+  ],
+  "theme": "discovered",
+  "rating": 1350,
+  "title": "Unleash the bishop"
+ },
+ {
+  "id": "p024",
+  "fen": "5r1k/6pp/7N/8/2Q5/8/6PP/6K1 w - - 0 1",
+  "moves": [
+   "c4g8",
+   "f8g8",
+   "h6f7"
+  ],
+  "san": [
+   "Qg8+",
+   "Rxg8",
+   "Nf7#"
+  ],
+  "theme": "mateIn2",
+  "rating": 1400,
+  "title": "Queen sacrifice, smothered mate"
+ },
+ {
+  "id": "p026",
+  "fen": "6k1/8/8/2q5/8/7n/6PP/5R1K b - - 0 1",
+  "moves": [
+   "c5g1",
+   "f1g1",
+   "h3f2"
+  ],
+  "san": [
+   "Qg1+",
+   "Rxg1",
+   "Nf2#"
+  ],
+  "theme": "mateIn2",
+  "rating": 1450,
+  "title": "Smothered mate, Black to play"
+ },
+ {
+  "id": "p020",
+  "fen": "4kb1r/p2n1ppp/4q3/4p1B1/4P3/1Q6/PPP2PPP/2KR4 w k - 1 16",
+  "moves": [
+   "b3b8",
+   "d7b8",
+   "d1d8"
+  ],
+  "san": [
+   "Qb8+",
+   "Nxb8",
+   "Rd8#"
+  ],
+  "theme": "mateIn2",
+  "rating": 1500,
+  "title": "The Opera Game"
+ },
+ {
+  "id": "p023",
+  "fen": "r4r1k/ppp1Nppp/8/7Q/8/3R4/PPP2PPP/6K1 w - - 0 1",
+  "moves": [
+   "h5h7",
+   "h8h7",
+   "d3h3"
+  ],
+  "san": [
+   "Qxh7+",
+   "Kxh7",
+   "Rh3#"
+  ],
+  "theme": "mateIn2",
+  "rating": 1500,
+  "title": "Anastasia's mate"
+ },
+ {
+  "id": "p021",
+  "fen": "2kr1b1r/pp1n1ppp/2n1p3/8/5B2/5Q2/PPP1BPPP/RN2K2R w KQ - 0 1",
+  "moves": [
+   "f3c6",
+   "b7c6",
+   "e2a6"
+  ],
+  "san": [
+   "Qxc6+",
+   "bxc6",
+   "Ba6#"
+  ],
+  "theme": "mateIn2",
+  "rating": 1600,
+  "title": "Boden's mate"
+ },
+ {
+  "id": "p028",
+  "fen": "rnb1kb1r/pp3ppp/2p5/4q3/4n3/3Q4/PPPB1PPP/2KR1BNR w kq - 0 9",
+  "moves": [
+   "d3d8",
+   "e8d8",
+   "d2g5",
+   "d8c7",
+   "g5d8"
+  ],
+  "san": [
+   "Qd8+",
+   "Kxd8",
+   "Bg5+",
+   "Kc7",
+   "Bd8#"
+  ],
+  "theme": "mateIn3",
+  "rating": 1800,
+  "title": "Réti vs Tartakower"
+ }
+]

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Chess Trainer</title>
+  <meta name="description" content="Train chess in your browser: tactics puzzles, an openings trainer and Stockfish bots.">
+  <meta name="theme-color" content="#0e1013">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="vendor/chess.js/chess.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="inner">
+      <a class="brand" href="index.html"><img src="img/favicon.svg" alt="" width="26" height="26"><span>Chess Trainer</span></a>
+      <nav class="nav" aria-label="Main"><a href="index.html" aria-current="page">Home</a><a href="puzzles.html">Puzzles</a><a href="openings.html">Openings</a><a href="play.html">Play</a><a href="stats.html">Stats</a></nav>
+    </div>
+  </header>
+  <main>
+    <section class="hero">
+      <h1>Train chess, one habit at a time</h1>
+      <p>Sharpen your tactics, learn a beginner-friendly opening repertoire and test yourself against Stockfish bots from 200 to 2500+ strength. Everything runs in your browser, with nothing to install.</p>
+    </section>
+    <section class="cards">
+      <a class="card" href="puzzles.html">
+        <div class="icon" aria-hidden="true">&#9822;</div>
+        <h2>Puzzles</h2>
+        <p>Forks, pins, skewers, hanging pieces and mates in one and two. Your rating adapts as you solve.</p>
+        <div class="meta" id="meta-puzzles">&nbsp;</div>
+      </a>
+      <a class="card" href="openings.html">
+        <div class="icon" aria-hidden="true">&#9821;</div>
+        <h2>Openings</h2>
+        <p>Italian Game and London System for White; 1...e5, Caro-Kann and 1...d5 for Black. Learn each idea, then quiz yourself.</p>
+        <div class="meta" id="meta-openings">&nbsp;</div>
+      </a>
+      <a class="card" href="play.html">
+        <div class="icon" aria-hidden="true">&#9818;</div>
+        <h2>Play vs Bot</h2>
+        <p>Ten levels of Stockfish. Use hints and undo while you learn, then review your blunders after the game.</p>
+        <div class="meta" id="meta-play">&nbsp;</div>
+      </a>
+      <a class="card" href="stats.html">
+        <div class="icon" aria-hidden="true">&#9776;</div>
+        <h2>Stats</h2>
+        <p>Puzzle streaks and accuracy, opening mastery, and your win/loss record against every bot level.</p>
+        <div class="meta" id="meta-stats">&nbsp;</div>
+      </a>
+    </section>
+  </main>
+  <footer class="site">Chess Trainer · Engine: Stockfish 17.1 (GPLv3) · Progress is saved in this browser only.</footer>
+  <script type="module" src="js/home.js"></script>
+</body>
+</html>
