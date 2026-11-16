@@ -121,12 +121,12 @@ export function explainMove(Chess, fen, uci, line = {}) {
   if (gain >= 1) {
     const what = gainPhrase(gain, captured);
     if (forkTargets.length >= 2) {
-      const names = [...new Set(forkTargets)].sort((a, b) => (a === 'k' ? -1 : b === 'k' ? 1 : VALUE[b] - VALUE[a])).slice(0, 2).map(t => NAME[t]);
-      const both = `the ${names[0]} and ${names[1] === names[0] ? 'another ' + names[1] : 'the ' + names[1]}`;
+      const names = [...forkTargets].sort((a, b) => (a === 'k' ? -1 : b === 'k' ? 1 : VALUE[b] - VALUE[a])).slice(0, 2).map(t => NAME[t]);
+      const both = names[0] === names[1] ? `two ${names[0]}s` : `the ${names[0]} and the ${names[1]}`;
       const top = forkTargets.filter(t => t !== 'k').sort((x, y) => VALUE[y] - VALUE[x])[0];
       const direct = top && Math.abs(VALUE[top] - gain) <= 1.5;
       return direct
-        ? `The ${piece} forks ${both}, winning the ${NAME[top]}.`
+        ? `The ${piece} forks ${both}, winning ${names[0] === names[1] ? 'one of them' : 'the ' + NAME[top]}.`
         : `The ${piece} forks ${both}, and you come out ahead: it ${what}.`;
     }
     if (m.captured && VALUE[m.captured] >= gain - 0.5 && !isDefended(Chess, fen, m.to, opp)) {
@@ -140,8 +140,9 @@ export function explainMove(Chess, fen, uci, line = {}) {
   // threats created by the move
   if (nm) {
     const t = immediateThreat(Chess, nm);
-    if (t && t.mate) return `It threatens checkmate with ${t.move.san}.`;
-    if (t && t.gain >= 3) return `It attacks the ${NAME[t.move.captured]} and threatens to win it.`;
+    const lead = m.captured ? `It takes the ${NAME[m.captured]} and` : isCheck ? 'It gives check and' : 'It';
+    if (t && t.mate) return `${lead} threatens checkmate with ${t.move.san}.`;
+    if (t && t.gain >= 3) return `${lead} attacks the ${NAME[t.move.captured]}, threatening to win it.`;
   }
 
   // defence: the opponent had a threat that this move stops
@@ -153,7 +154,10 @@ export function explainMove(Chess, fen, uci, line = {}) {
       const stillThere = after && (after.mate === t0.mate) && (t0.mate || after.gain >= t0.gain);
       if (!stillThere) {
         if (t0.mate) return `It defends against the threat of ${t0.move.san} mate.`;
-        if (t0.move.to === m.from) return `It moves the attacked ${piece} to safety.`;
+        if (t0.move.to === m.from) {
+          if (m.captured) return `It takes the ${NAME[m.captured]} and gets the attacked ${piece} to safety.`;
+          return `It moves the attacked ${piece} to safety${isCheck ? ' with check' : ''}.`;
+        }
         return `It defends the ${NAME[t0.move.captured]} that was under attack.`;
       }
     }
@@ -163,7 +167,11 @@ export function explainMove(Chess, fen, uci, line = {}) {
   if (m.flags.includes('k') || m.flags.includes('q')) return 'Castling gets the king to safety and brings the rook into play.';
   const cp = score.cp ?? 0;
   if (isCheck) return 'This check drives the enemy king into a worse position.';
-  if (m.captured) return `Taking the ${NAME[m.captured]} keeps the material balance in your favour.`;
+  if (m.captured) {
+    return cp >= 50
+      ? `Taking the ${NAME[m.captured]} keeps the material balance in your favour.`
+      : `Taking the ${NAME[m.captured]} is needed to keep the material level; other moves fall behind.`;
+  }
   if (m.promotion) return `Promoting to ${article(NAME[m.promotion])} decides the game.`;
   if (cp >= 150) return `It builds on your advantage; other moves let the opponent back into the game.`;
   if (cp <= -150) return 'It is the toughest defence; everything else loses faster.';
