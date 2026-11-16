@@ -2,17 +2,20 @@
 // moves before `startPly` (half-moves) are played automatically.
 const has = (h, k, s) => (h[k] || '').toLowerCase().includes(s.toLowerCase());
 const yr = (h, y) => (h.Date || '').startsWith(y);
+// Display names for players as spelled in the source PGNs.
+exports.NAMES = {"Robert James Fischer": "Bobby Fischer", "Gary Kasparov": "Garry Kasparov", "Boris V Spassky": "Boris Spassky", "L Aronian": "Levon Aronian", "V Anand": "Viswanathan Anand", "Curt Von Bardeleben": "Curt von Bardeleben", "Jose Raul Capablanca": "José Raúl Capablanca"};
+
 exports.GAMES = [
-  { id: 'immortal', title: 'The Immortal Game', side: 'w', startPly: 8,
+  { id: 'immortal', title: 'The Immortal Game', side: 'w', startPly: 8, event: 'London',
     match: h => has(h, 'White', 'Anderssen') && has(h, 'Black', 'Kieseritzky') && has(h, 'Event', 'Immortal'),
     intro: 'Anderssen gives up a bishop, both rooks and his queen, then mates with his remaining minor pieces. Play White.' },
-  { id: 'evergreen', title: 'The Evergreen Game', side: 'w', startPly: 8,
+  { id: 'evergreen', title: 'The Evergreen Game', side: 'w', startPly: 8, event: 'Berlin',
     match: h => has(h, 'White', 'Anderssen') && has(h, 'Black', 'Dufresne') && yr(h, '1852'),
     intro: 'An Evans Gambit that ends with a queen sacrifice and a bishop mate. Play White.' },
-  { id: 'opera', title: 'The Opera Game', side: 'w', startPly: 4,
+  { id: 'opera', title: 'The Opera Game', side: 'w', startPly: 4, black: 'Duke Karl of Brunswick & Count Isouard', event: 'Paris',
     match: h => has(h, 'White', 'Morphy') && has(h, 'Black', 'Isouard') && yr(h, '1858'),
     intro: 'Morphy, at the Paris opera, shows how fast development wins: open lines, then a queen sacrifice. Play White.' },
-  { id: 'century', title: 'The Game of the Century', side: 'b', startPly: 10,
+  { id: 'century', title: 'The Game of the Century', side: 'b', startPly: 10, event: 'New York',
     match: h => has(h, 'White', 'Byrne') && has(h, 'Black', 'Fischer') && yr(h, '1956'),
     intro: '13-year-old Bobby Fischer sacrifices his queen and wins with a stream of checks. Play Black.' },
   { id: 'steinitz-bardeleben', title: 'Steinitz vs von Bardeleben', side: 'w', startPly: 10,
@@ -27,16 +30,16 @@ exports.GAMES = [
   { id: 'botvinnik-capablanca', title: 'Botvinnik vs Capablanca', side: 'w', startPly: 12,
     match: h => has(h, 'White', 'Botvinnik') && has(h, 'Black', 'Capablanca') && yr(h, '1938'),
     intro: 'AVRO 1938: a slow build-up, then a famous combination to push a passed pawn home. Play White.' },
-  { id: 'fischer-spassky-6', title: 'Fischer vs Spassky, game 6', side: 'w', startPly: 10,
+  { id: 'fischer-spassky-6', title: 'Fischer vs Spassky, game 6', side: 'w', startPly: 10, event: 'Reykjavik World Championship',
     match: h => has(h, 'White', 'Fischer') && has(h, 'Black', 'Spassky') && yr(h, '1972') && (h.Round || '').replace(/\D/g, '') === '6',
     intro: 'The 1972 World Championship game Spassky himself applauded. Positional chess at its cleanest. Play White.' },
-  { id: 'karpov-kasparov-16', title: 'Karpov vs Kasparov, game 16', side: 'b', startPly: 12,
+  { id: 'karpov-kasparov-16', title: 'Karpov vs Kasparov, game 16', side: 'b', startPly: 12, event: 'Moscow World Championship',
     match: h => has(h, 'White', 'Karpov') && has(h, 'Black', 'Kasparov') && yr(h, '1985') && (h.Round || '').replace(/\D/g, '') === '16',
     intro: '1985 World Championship: Kasparov\'s knight on d3 paralyses White\'s whole position. Play Black.' },
-  { id: 'kasparov-topalov', title: 'Kasparov vs Topalov', side: 'w', startPly: 12,
+  { id: 'kasparov-topalov', title: 'Kasparov vs Topalov', side: 'w', startPly: 12, event: 'Wijk aan Zee',
     match: h => has(h, 'White', 'Kasparov') && has(h, 'Black', 'Topalov') && yr(h, '1999') && has(h, 'Event', 'Hoogovens'),
     intro: 'Wijk aan Zee 1999: a rook sacrifice starts a king hunt across the whole board. Play White.' },
-  { id: 'aronian-anand', title: 'Aronian vs Anand', side: 'b', startPly: 12,
+  { id: 'aronian-anand', title: 'Aronian vs Anand', side: 'b', startPly: 12, event: 'Wijk aan Zee',
     match: h => has(h, 'White', 'Aronian') && has(h, 'Black', 'Anand') && yr(h, '2013'),
     intro: 'Wijk aan Zee 2013: Anand sacrifices pieces to tear open the white king. Play Black.' },
 ];

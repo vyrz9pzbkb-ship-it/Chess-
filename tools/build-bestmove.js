@@ -9,7 +9,7 @@ const { pathToFileURL } = require('url');
 const { Chess } = require('../vendor/chess.js/chess.js');
 const { Engine, val } = require('./engine');
 const { parsePgnFile } = require('./pgn');
-const { GAMES } = require('./master-games.src');
+const { GAMES, NAMES } = require('./master-games.src');
 
 const dir = process.argv[2];
 const TARGET = +(process.argv[3] || 120);
@@ -23,7 +23,10 @@ const V = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
 const pieceMaterial = g => g.board().flat().filter(Boolean).reduce((s, p) => s + (p.type === 'p' ? 0 : V[p.type]), 0);
 const clampCp = s => s.mate !== undefined ? (s.mate > 0 ? 1000 : -1000) : Math.max(-1000, Math.min(1000, s.cp));
 const year = h => (h.Date || '').slice(0, 4).replace(/\?/g, '');
-const cleanName = n => (n || '?').replace(/\s+/g, ' ').trim().replace(/^(.+?),\s*(.+)$/, '$2 $1');
+const cleanName = (n) => {
+  const c = (n || '?').replace(/\s+/g, ' ').trim().replace(/^(.+?),\s*(.+)$/, '$2 $1');
+  return NAMES[c] || c;
+};
 
 function sacrifice(fen, m) {
   // does the moved piece land on a square the opponent attacks, giving up more than it takes?
@@ -153,8 +156,8 @@ function sacrifice(fen, m) {
       replay.move(moves[i].san);
     }
     outGames.push({
-      id: spec.id, title: spec.title, white: cleanName(game.headers.White), black: cleanName(game.headers.Black),
-      event: game.headers.Event, year: year(game.headers), result: game.headers.Result, side, startPly: spec.startPly,
+      id: spec.id, title: spec.title, white: spec.white || cleanName(game.headers.White), black: spec.black || cleanName(game.headers.Black),
+      event: spec.event || game.headers.Event, year: year(game.headers), result: game.headers.Result, side, startPly: spec.startPly,
       intro: spec.intro, moves,
     });
     console.error('game', spec.id, moves.length, 'plies');
