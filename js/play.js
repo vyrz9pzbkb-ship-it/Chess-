@@ -1,9 +1,11 @@
-import { Board, ARROW, MARK, uciToMove, moveToUci, uciToSan } from './board.js';
-import { Engine, scoreToCp, formatScore } from './engine.js';
+import { Board, ARROW, uciToMove, moveToUci, uciToSan } from './board.js';
+import { Engine, formatScore } from './engine.js';
+import { BOT_ELOS, botConfig } from './levels.js';
+import { loadBook, bookMove } from './book.js';
+import { reviewGame } from './review.js';
+import { mountReview } from './review-ui.js';
 import * as store from './storage.js';
-import { $, $$, el, toast, sleep, sparkline } from './ui.js';
-import { LEVELS } from './levels.js';
-
+import { $, $$, el, toast, sleep } from './ui.js';
 
 const engine = new Engine();
 const board = new Board($('#board'));
@@ -11,29 +13,36 @@ let settings = store.load('settings', store.SETTINGS_DEFAULTS);
 let botStats = store.load('bot', store.BOT_DEFAULTS);
 
 let game = new Chess();
-let level = settings.botLevel || 3;
-let userColor = 'w';
+let elo = BOT_ELOS.includes(settings.botElo) ? settings.botElo : 800;
 let colorChoice = settings.botColor || 'w';
+let tcChoice = settings.botTc || '0';
+let userColor = 'w';
 let token = 0;           // bumps on undo/new game to discard stale engine answers
 let thinking = false;
-let over = false;
-let result = null;       // 'w' | 'l' | 'd'
+let over = true;
 let hints = 0, undos = 0;
-let reviewData = null;
+let useBook = true;
+let book = null;
+let clock = null;        // {w, b, inc, turnStart, timer}
+let userClocks = [];     // time left when you made each move (ms), by ply
+let reviewToken = 0;
 
-/* ---------- setup UI ---------- */
+/* ---------------- setup ---------------- */
 function renderSetup() {
   $$('#color-seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.color === colorChoice)));
-  const box = $('#levels');
-  box.replaceChildren(...Object.keys(LEVELS).map(n => el('button', {
-    'aria-pressed': String(+n === level), title: `Level ${n} (~${LEVELS[n].elo})`,
-    onclick: () => { level = +n; settings.botLevel = level; store.save('settings', settings); renderSetup(); },
-  }, n)));
-  const rec = botStats.levels[level] || { w: 0, l: 0, d: 0 };
-  $('#level-desc').textContent = `Level ${level} · about ${LEVELS[level].elo} rating. ${LEVELS[level].desc} Your record: ${rec.w}W ${rec.l}L ${rec.d}D.`;
+  $$('#tc-seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tc === tcChoice)));
+  $('#levels').replaceChildren(...BOT_ELOS.map(e => el('button', {
+    'aria-pressed': String(e === elo),
+    onclick: () => { elo = e; settings.botElo = e; store.save('settings', settings); renderSetup(); },
+  }, String(e))));
+  const rec = (botStats.elo || {})[elo] || { w: 0, l: 0, d: 0 };
+  $('#level-desc').textContent = `Bot rated about ${elo}. ${botConfig(elo).desc} Your record: ${rec.w}W ${rec.l}L ${rec.d}D.`;
 }
 $$('#color-seg button').forEach(b => b.addEventListener('click', () => {
   colorChoice = b.dataset.color; settings.botColor = colorChoice; store.save('settings', settings); renderSetup();
+}));
+$$('#tc-seg button').forEach(b => b.addEventListener('click', () => {
+  tcChoice = b.dataset.tc; settings.botTc = tcChoice; store.save('settings', settings); renderSetup();
 }));
 
 function setStatus(text, kind = '') {
@@ -41,27 +50,81 @@ function setStatus(text, kind = '') {
   $('#status-text').textContent = text;
 }
 
-/* ---------- game flow ---------- */
+/* ---------------- clocks ---------------- */
+const fmtClock = ms => {
+  const s = Math.max(0, Math.ceil(ms / 1000));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+};
+function timeLeft(color) {
+  if (!clock) return Infinity;
+  const running = !over && game.turn() === color;
+  return clock[color] - (running ? performance.now() - clock.turnStart : 0);
+}
+function renderClocks() {
+  const show = !!clock;
+  $('#clock-top').classList.toggle('hidden', !show);
+  $('#clock-bottom').classList.toggle('hidden', !show);
+  if (!show) return;
+  const opp = userColor === 'w' ? 'b' : 'w';
+  for (const [id, c] of [['top', opp], ['bottom', userColor]]) {
+    const t = timeLeft(c);
+    $(`#clock-${id}-time`).textContent = fmtClock(t);
+    $(`#clock-${id}`).classList.toggle('active', !over && game.turn() === c);
+    $(`#clock-${id}`).classList.toggle('low', t < 20000);
+  }
+}
+function startClock(tc, saved) {
+  stopClock();
+  if (!tc || tc === '0') { clock = null; renderClocks(); return; }
+  const [min, inc] = tc.split('+').map(Number);
+  clock = { w: min * 60000, b: min * 60000, inc: inc * 1000, turnStart: performance.now(), tc };
+  if (saved) Object.assign(clock, { w: saved.w, b: saved.b });
+  clock.timer = setInterval(() => {
+    renderClocks();
+    if (over) return;
+    const side = game.turn();
+    if (timeLeft(side) <= 0) {
+      clock[side] = 0;
+      endGame(side === userColor ? 'l' : 'w', 'timeout', side === userColor ? 'You ran out of time.' : 'The bot ran out of time. You win!');
+    }
+  }, 200);
+  renderClocks();
+}
+function clockAfterMove(mover) {
+  if (!clock) return;
+  const now = performance.now();
+  clock[mover] = clock[mover] - (now - clock.turnStart) + clock.inc;
+  clock.turnStart = now;
+}
+function stopClock() { if (clock && clock.timer) clearInterval(clock.timer); }
+
+/* ---------------- game flow ---------------- */
 async function startGame(opts = {}) {
   token++;
+  reviewToken++;
   engine.stop();
   engine.newGame();
+  book = await loadBook();
   game = new Chess();
-  level = opts.level || level;
+  elo = opts.elo || elo;
   userColor = opts.color || (colorChoice === 'r' ? (Math.random() < 0.5 ? 'w' : 'b') : colorChoice);
-  over = false; result = null; thinking = false; hints = opts.hints || 0; undos = opts.undos || 0; reviewData = null;
+  over = false; thinking = false;
+  hints = opts.hints || 0; undos = opts.undos || 0;
+  userClocks = opts.clocks || [];
+  useBook = opts.useBook ?? Math.random() < 0.85;
   for (const san of opts.moves || []) game.move(san);
   $('#setup').classList.add('hidden');
   $('#game').classList.remove('hidden');
+  $('#game-buttons').classList.remove('hidden');
   $('#review').classList.add('hidden');
-  $('#btn-review').classList.add('hidden');
-  $('#game-meta').textContent = `You play ${userColor === 'w' ? 'White' : 'Black'} vs Bot level ${level} (~${LEVELS[level].elo})`;
+  $('#moves-panel').classList.remove('hidden');
+  const tc = opts.tc ?? tcChoice;
+  $('#game-meta').textContent = `You play ${userColor === 'w' ? 'White' : 'Black'} vs the bot (~${elo})${tc && tc !== '0' ? ' · ' + tc : ''}`;
+  $('#clock-top-name').textContent = `Bot (${elo})`;
   await board.setOrientation(userColor);
   await board.sync(game, false);
-  // on narrow screens the setup panel sits below the board: bring the board back into view
-  if (!opts.moves && window.matchMedia('(max-width: 900px)').matches) {
-    $('.board-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
+  if (!opts.moves && window.matchMedia('(max-width: 900px)').matches) $('.board-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  startClock(tc, opts.clock);
   board.enableInput(game, userColor, onUserMove);
   renderMoves();
   saveCurrent();
@@ -70,16 +133,16 @@ async function startGame(opts = {}) {
 
 function nextTurn() {
   updateButtons();
+  renderClocks();
   if (checkGameOver()) return;
-  if (game.turn() === userColor) {
-    setStatus('Your move.', 'turn-' + userColor);
-  } else {
-    botMove();
-  }
+  if (game.turn() === userColor) setStatus('Your move.', 'turn-' + userColor);
+  else botMove();
 }
 
 async function onUserMove(move) {
   if (over || thinking || game.turn() === userColor) return false;
+  userClocks[game.history().length - 1] = clock ? Math.max(0, Math.round(timeLeft(userColor))) : null;
+  clockAfterMove(userColor);
   renderMoves();
   saveCurrent();
   nextTurn();
@@ -91,23 +154,24 @@ async function botMove() {
   thinking = true;
   updateButtons();
   setStatus('Bot is thinking…', 'turn-' + game.turn());
-  const cfg = LEVELS[level];
+  const cfg = botConfig(elo);
   const started = performance.now();
-  let uci;
-  const legal = game.moves({ verbose: true });
-  if (Math.random() < cfg.random) {
-    const m = legal[Math.floor(Math.random() * legal.length)];
-    uci = moveToUci(m);
-  } else {
-    const res = await engine.analyse(game.fen(), { depth: cfg.depth, movetime: cfg.movetime, skill: cfg.skill });
-    uci = res.bestmove || moveToUci(legal[0]);
+  let uci = useBook ? bookMove(book, game.history(), userColor) : null;
+  if (!uci) {
+    const legal = game.moves({ verbose: true });
+    if (Math.random() < cfg.random) uci = moveToUci(legal[Math.floor(Math.random() * legal.length)]);
+    else {
+      const res = await engine.analyse(game.fen(), { depth: cfg.depth, movetime: cfg.movetime, skill: cfg.skill, elo: cfg.elo || 0 });
+      uci = res.bestmove || moveToUci(legal[0]);
+    }
   }
-  const minDelay = 350 + Math.random() * 300;
-  const wait = minDelay - (performance.now() - started);
+  const wait = 350 + Math.random() * 300 - (performance.now() - started);
   if (wait > 0) await sleep(wait);
-  if (t !== token) return; // game changed while thinking
+  if (t !== token || over) return;
   thinking = false;
+  const mover = game.turn();
   game.move(uciToMove(uci));
+  clockAfterMove(mover);
   await board.sync(game, true);
   renderMoves();
   saveCurrent();
@@ -116,52 +180,95 @@ async function botMove() {
 
 function checkGameOver() {
   if (!game.game_over()) return false;
-  let text, res;
   if (game.in_checkmate()) {
-    const loser = game.turn();
-    res = loser === userColor ? 'l' : 'w';
-    text = res === 'w' ? 'Checkmate. You win! 🎉' : 'Checkmate. The bot wins.';
+    const res = game.turn() === userColor ? 'l' : 'w';
+    endGame(res, 'checkmate', res === 'w' ? 'Checkmate. You win! 🎉' : 'Checkmate. The bot wins.');
   } else {
-    res = 'd';
-    text = game.in_stalemate() ? 'Stalemate. Draw.' :
-      game.in_threefold_repetition() ? 'Draw by threefold repetition.' :
-      game.insufficient_material() ? 'Draw: insufficient material.' : 'Draw (50-move rule).';
+    const reason = game.in_stalemate() ? 'stalemate' : game.in_threefold_repetition() ? 'repetition' : game.insufficient_material() ? 'insufficient material' : '50-move rule';
+    endGame('d', reason, `Draw by ${reason}.`);
   }
-  endGame(res, text);
   return true;
 }
 
-function endGame(res, text) {
-  over = true; result = res; thinking = false;
+const REASON_TEXT = { checkmate: 'checkmate', resignation: 'resignation', timeout: 'timeout' };
+
+function endGame(res, reason, text) {
+  if (over) return;
+  over = true; thinking = false;
   token++;
+  stopClock();
+  renderClocks();
   board.disableInput();
   setStatus(text, res === 'w' ? 'good' : res === 'l' ? 'bad' : 'info');
-  const rec = botStats.levels[level] || (botStats.levels[level] = { w: 0, l: 0, d: 0 });
+  botStats.elo = botStats.elo || {};
+  const rec = botStats.elo[elo] || (botStats.elo[elo] = { w: 0, l: 0, d: 0 });
   rec[res]++;
-  botStats.games.push({ level, color: userColor, result: res, moves: game.history().length, hints, undos, at: Date.now() });
-  if (botStats.games.length > 200) botStats.games.shift();
   store.save('bot', botStats);
   clearCurrent();
-  $('#btn-review').classList.remove('hidden');
   updateButtons();
+  $('#game-buttons').classList.add('hidden');
+  const record = {
+    id: 'g' + Date.now(), at: Date.now(), userColor, elo, tc: clock ? clock.tc : null,
+    result: res, reason: REASON_TEXT[reason] || reason, moves: game.history(),
+    clocks: userClocks.slice(0, game.history().length), hints, undos, review: null,
+  };
+  saveGame(record);
+  runReview(record);
 }
 
+/* ---------------- saving ---------------- */
+function saveGame(record) {
+  const data = store.load('games', store.GAMES_DEFAULTS);
+  const i = data.games.findIndex(g => g.id === record.id);
+  if (i >= 0) data.games[i] = record; else data.games.push(record);
+  if (data.games.length > 150) data.games.splice(0, data.games.length - 150);
+  // if storage is full, drop the reviews of the oldest games first
+  for (let tries = 0; tries < 50; tries++) {
+    try { localStorage.setItem('chesstrainer.games', JSON.stringify(data)); return; } catch (e) {
+      const old = data.games.find(g => g.review && g.id !== record.id);
+      if (!old) return;
+      old.review = null;
+    }
+  }
+}
+
+/* ---------------- review ---------------- */
+async function runReview(record) {
+  const t = ++reviewToken;
+  $('#review').classList.remove('hidden');
+  $('#review-body').replaceChildren();
+  const bar = $('#review-bar');
+  bar.classList.remove('hidden');
+  const review = await reviewGame(engine, Chess, record, book, (i, n) => {
+    if (t !== reviewToken) return;
+    $('#review-progress').replaceChildren(el('span', { class: 'loader' }), ` Stockfish is reviewing your game (depth 15): position ${Math.min(i + 1, n)} of ${n}…`);
+    bar.firstElementChild.style.width = (100 * i / n) + '%';
+  }, () => t !== reviewToken);
+  if (!review || t !== reviewToken) return;
+  bar.classList.add('hidden');
+  $('#review-progress').textContent = '';
+  record.review = review;
+  saveGame(record);
+  $('#moves-panel').classList.add('hidden');
+  mountReview($('#review-body'), record, board, () => engine);
+  if (window.matchMedia('(max-width: 900px)').matches) $('#review').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ---------------- buttons ---------------- */
 function updateButtons() {
   const userTurn = game.turn() === userColor;
-  $('#btn-undo').disabled = over || game.history().length === 0 || (!userTurn && !thinking) ||
+  $('#btn-undo').disabled = over || !!clock || game.history().length === 0 || (!userTurn && !thinking) ||
     (userColor === 'b' && game.history().length < 2 && !thinking);
+  $('#btn-undo').title = clock ? 'Undo is off in games with a clock' : '';
   $('#btn-hint').disabled = over || !userTurn || thinking;
   $('#btn-resign').disabled = over;
 }
 
 function undo() {
-  if (over) return;
-  if (thinking) {
-    token++; thinking = false; engine.stop();
-    game.undo();                        // take back the user's last move
-  } else if (game.turn() === userColor && game.history().length >= 2) {
-    game.undo(); game.undo();
-  } else return;
+  if (over || clock) return;
+  if (thinking) { token++; thinking = false; engine.stop(); game.undo(); }
+  else if (game.turn() === userColor && game.history().length >= 2) { game.undo(); game.undo(); }
+  else return;
   undos++;
   board.sync(game, true);
   renderMoves();
@@ -183,173 +290,67 @@ async function hint() {
   board.clearArrows();
   board.arrow(ARROW.hint, m.from, m.to);
   const line = res.lines[0];
-  // the score is from the side to move's view, which is the user here
-  const evalText = line ? ` (eval ${formatScore(line.score)} for you)` : '';
-  setStatus(`Best move: ${uciToSan(fen, res.bestmove)}${evalText}`, 'info');
+  setStatus(`Best move: ${uciToSan(fen, res.bestmove)}${line ? ` (eval ${formatScore(line.score)} for you)` : ''}`, 'info');
   updateButtons();
 }
 
 function resign() {
-  if (over) return;
-  if (!confirm('Resign this game?')) return;
+  if (over || !confirm('Resign this game?')) return;
   engine.stop();
-  endGame('l', 'You resigned.');
+  endGame('l', 'resignation', 'You resigned.');
 }
 
-/* ---------- move list ---------- */
-function renderMoves(marks = {}, onClick) {
+/* ---------------- move list ---------------- */
+function renderMoves() {
   const box = $('#moves');
   box.replaceChildren();
   const hist = game.history();
   hist.forEach((san, i) => {
     if (i % 2 === 0) box.append(el('div', { class: 'num' }, `${i / 2 + 1}.`));
-    const cls = ['mv'];
-    if (i === hist.length - 1 && !onClick) cls.push('cur');
-    if (marks[i]) cls.push(marks[i]);
-    if (onClick) cls.push('clickable');
-    box.append(el('div', { class: cls.join(' '), 'data-ply': i, onclick: onClick ? () => onClick(i) : null }, san));
+    box.append(el('div', { class: 'mv' + (i === hist.length - 1 ? ' cur' : '') }, san));
   });
   box.scrollTop = box.scrollHeight;
 }
 
-/* ---------- persistence of an unfinished game ---------- */
+/* ---------------- unfinished game ---------------- */
 function saveCurrent() {
-  settings.current = { level, color: userColor, moves: game.history(), hints, undos };
+  if (over) return;
+  settings.current = {
+    elo, color: userColor, moves: game.history(), hints, undos, useBook, clocks: userClocks,
+    tc: clock ? clock.tc : '0', clock: clock ? { w: Math.round(timeLeft('w')), b: Math.round(timeLeft('b')) } : null,
+  };
   store.save('settings', settings);
 }
 function clearCurrent() { delete settings.current; store.save('settings', settings); }
 
-/* ---------- review ---------- */
-async function review() {
-  $('#review').classList.remove('hidden');
-  $('#btn-review').classList.add('hidden');
-  $('#review-list').replaceChildren();
-  $('#review-summary').replaceChildren();
-  $('#review-chart').replaceChildren();
-  const t = token;
-  const hist = game.history({ verbose: true });
-  const replay = new Chess();
-  const fens = [replay.fen()];
-  for (const m of hist) { replay.move(m); fens.push(replay.fen()); }
-
-  // eval of each position, from the side to move's view
-  const evals = [];
-  for (let i = 0; i < fens.length; i++) {
-    if (t !== token) return;
-    $('#review-progress').replaceChildren(el('span', { class: 'loader' }), ` Analysing position ${i + 1} of ${fens.length}…`);
-    const g = new Chess(fens[i]);
-    if (g.in_checkmate()) { evals.push({ cp: -1000, best: null, score: { mate: 0 } }); continue; }
-    if (g.game_over()) { evals.push({ cp: 0, best: null, score: { cp: 0 } }); continue; }
-    const res = await engine.analyse(fens[i], { depth: 14, movetime: 600, skill: 20 });
-    const line = res.lines[0];
-    evals.push({ cp: scoreToCp(line && line.score), best: res.bestmove, score: line && line.score });
-  }
-  if (t !== token) return;
-  $('#review-progress').textContent = '';
-
-  const items = [];
-  const marks = {};
-  for (let i = 0; i < hist.length; i++) {
-    const mover = i % 2 === 0 ? 'w' : 'b';
-    if (mover !== userColor) continue;
-    const before = evals[i].cp;            // user to move
-    const after = -evals[i + 1].cp;        // opponent to move, so flip
-    const loss = before - after;
-    const playedUci = moveToUci(hist[i]);
-    if (evals[i].best === playedUci) continue;
-    if (loss >= 200) { marks[i] = 'blunder'; items.push({ i, loss, before, after, kind: 'Blunder' }); }
-    else if (loss >= 100) { marks[i] = 'mistake'; items.push({ i, loss, before, after, kind: 'Mistake' }); }
-  }
-  reviewData = { fens, evals, hist, items, marks };
-  const blunders = items.filter(x => x.kind === 'Blunder').length;
-  const mistakes = items.length - blunders;
-  $('#review-summary').append(el('p', {},
-    blunders === 0 ? 'No blunders, well played! ' : `${blunders} blunder${blunders > 1 ? 's' : ''} (moves that lost 2+ pawns). `,
-    mistakes ? `${mistakes} smaller mistake${mistakes > 1 ? 's' : ''}.` : ''));
-
-  // eval chart from the user's perspective
-  const series = evals.map((e, i) => {
-    const whiteView = i % 2 === 0 ? e.cp : -e.cp;
-    return userColor === 'w' ? whiteView : -whiteView;
-  });
-  const chart = sparkline(series, { height: 70 });
-  $('#review-chart').append(el('div', { class: 'small muted' }, 'Evaluation for you across the game'), chart);
-
-  for (const it of items) {
-    const moveNo = Math.floor(it.i / 2) + 1 + (it.i % 2 ? '...' : '.');
-    const bestSan = evals[it.i].best ? uciToSan(fens[it.i], evals[it.i].best) : '?';
-    const node = el('div', { class: 'review-item', onclick: () => showReviewItem(it, node) },
-      el('div', { class: 'line1' }, `${it.kind}: ${moveNo} ${hist[it.i].san}${it.kind === 'Blunder' ? '??' : '?'}`),
-      el('div', { class: 'small muted' }, `Eval ${fmt(it.before)} → ${fmt(it.after)} · Better was ${bestSan}`));
-    $('#review-list').append(node);
-  }
-  renderMoves(marks, (i) => showPly(i));
-  if (items.length) showReviewItem(items[0], $('#review-list').firstChild);
-}
-
-const fmt = cp => (Math.abs(cp) >= 1000 ? (cp > 0 ? '+M' : '-M') : (cp > 0 ? '+' : '') + (cp / 100).toFixed(1));
-
-async function showReviewItem(it, node) {
-  $$('.review-item').forEach(n => n.classList.remove('active'));
-  if (node) node.classList.add('active');
-  const { fens, evals, hist } = reviewData;
-  const g = new Chess(fens[it.i]);
-  await board.sync(g, false);
-  const played = hist[it.i];
-  board.arrow(ARROW.bad, played.from, played.to);
-  const best = evals[it.i].best;
-  if (best) { const b = uciToMove(best); board.arrow(ARROW.good, b.from, b.to); }
-  const bestSan = best ? uciToSan(fens[it.i], best) : '?';
-  const n = $('#review-note');
-  n.classList.remove('hidden');
-  n.replaceChildren(
-    el('div', {}, el('span', { class: 'san', style: 'color:var(--danger)' }, played.san), `cost you ${(it.loss / 100).toFixed(1)} pawns (${fmt(it.before)} → ${fmt(it.after)}).`),
-    el('div', { style: 'margin-top:6px' }, el('span', { class: 'san', style: 'color:var(--accent)' }, bestSan), 'was the engine\'s choice. Green arrow: best move, red: your move.'));
-  $('#btn-review-final').classList.remove('hidden');
-}
-
-async function showPly(i) {
-  const { fens, hist, items } = reviewData;
-  const it = items.find(x => x.i === i);
-  if (it) return showReviewItem(it, $$('.review-item')[items.indexOf(it)]);
-  const g = new Chess(fens[i + 1]);
-  await board.sync(g, false);
-  const m = hist[i];
-  board.mark(MARK.last, m.from); board.mark(MARK.last, m.to);
-  $('#review-note').classList.add('hidden');
-  $('#btn-review-final').classList.remove('hidden');
-}
-
-/* ---------- wiring ---------- */
+/* ---------------- wiring ---------------- */
 $('#btn-start').addEventListener('click', () => startGame());
 $('#btn-undo').addEventListener('click', undo);
 $('#btn-hint').addEventListener('click', hint);
 $('#btn-resign').addEventListener('click', resign);
-$('#btn-review').addEventListener('click', review);
-$('#btn-review-final').addEventListener('click', async () => {
-  $$('.review-item').forEach(n => n.classList.remove('active'));
-  $('#review-note').classList.add('hidden');
-  $('#btn-review-final').classList.add('hidden');
-  await board.sync(game, false);
-});
 $('#btn-new').addEventListener('click', () => {
-  if (!over && game.history().length > 1 && !confirm('Abandon the current game? It won\'t be counted.')) return;
-  token++; engine.stop(); thinking = false; over = true;
+  if (!over && game.history().length > 1 && !confirm('Abandon the current game? It won\'t be saved.')) return;
+  token++; reviewToken++; engine.stop(); thinking = false; over = true;
+  stopClock(); clock = null; renderClocks();
   clearCurrent();
   board.disableInput();
   $('#game').classList.add('hidden');
   $('#review').classList.add('hidden');
+  $('#moves-panel').classList.remove('hidden');
   $('#setup').classList.remove('hidden');
   game = new Chess();
   board.sync(game, true);
   renderMoves();
   renderSetup();
 });
+// keep the clock honest when the tab is hidden and shown again
+document.addEventListener('visibilitychange', () => { if (!document.hidden) renderClocks(); });
+window.addEventListener('beforeunload', saveCurrent);
 
 renderSetup();
 renderMoves();
-if (settings.current && LEVELS[settings.current.level]) {
+if (settings.current && settings.current.moves) {
   const c = settings.current;
-  startGame({ level: c.level, color: c.color, moves: c.moves, hints: c.hints, undos: c.undos });
+  startGame({ elo: c.elo, color: c.color, moves: c.moves, hints: c.hints, undos: c.undos, useBook: c.useBook, clocks: c.clocks, tc: c.tc, clock: c.clock });
   toast('Resumed your unfinished game.');
 }

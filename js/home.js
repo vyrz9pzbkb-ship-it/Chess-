@@ -14,10 +14,10 @@ $('#meta-openings').textContent = lines.length
   ? `${lines.filter(l => l.perfect).length} lines mastered · ${lines.filter(l => l.studied).length} studied`
   : '12 lines to learn';
 
-const tot = Object.values(b.levels).reduce((a, r) => ({ w: a.w + r.w, l: a.l + r.l, d: a.d + r.d }), { w: 0, l: 0, d: 0 });
+const tot = [...Object.values(b.levels), ...Object.values(b.elo || {})].reduce((a, r) => ({ w: a.w + r.w, l: a.l + r.l, d: a.d + r.d }), { w: 0, l: 0, d: 0 });
 $('#meta-play').textContent = tot.w + tot.l + tot.d
   ? `${tot.w} wins · ${tot.l} losses · ${tot.d} draws`
-  : 'Levels 1 to 10';
+  : 'Bots rated 400 to 2000, with a full review after every game';
 
 $('#meta-stats').textContent = p.bestStreak ? `Best puzzle streak: ${p.bestStreak}` : 'Track your progress';
 

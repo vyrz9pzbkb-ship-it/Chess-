@@ -65,6 +65,10 @@ export const SIM_DEFAULTS = {
   games: {},            // openingId -> {w, l, d} after the opening
 };
 
+export const GAMES_DEFAULTS = {
+  games: [],            // finished games vs the bot, newest last (see js/play.js saveGame)
+};
+
 export const SETTINGS_DEFAULTS = {
   botLevel: 3,
   botColor: 'w',

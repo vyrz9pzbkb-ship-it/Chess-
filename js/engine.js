@@ -34,7 +34,7 @@ export class Engine {
 
   /**
    * Analyse a position. Jobs are serialised so callers never interleave.
-   * opts: {depth, movetime, multipv, skill}
+   * opts: {depth, movetime, multipv, skill, elo}
    * resolves {bestmove, lines:[{move, score:{cp}|{mate}, pv:[], depth}]}
    * Scores are from the side to move's point of view.
    */
@@ -44,10 +44,13 @@ export class Engine {
     return job;
   }
 
-  async _analyse(fen, { depth = 12, movetime = 0, multipv = 1, skill = 20 } = {}) {
+  async _analyse(fen, { depth = 12, movetime = 0, multipv = 1, skill = 20, elo = 0 } = {}) {
     await this.ready;
     this.send('setoption name MultiPV value ' + multipv);
     this.send('setoption name Skill Level value ' + skill);
+    // elo: play at a limited rating (Stockfish supports 1320 and up); 0 = full strength
+    this.send('setoption name UCI_LimitStrength value ' + (elo ? 'true' : 'false'));
+    if (elo) this.send('setoption name UCI_Elo value ' + Math.max(1320, elo));
     await this.isReady();
     this.send('position fen ' + fen);
     const lines = [];

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Game History · Chess Trainer</title>
+  <meta name="description" content="Your saved games against the bot, each with a full Stockfish review.">
+  <meta name="theme-color" content="#0e1013">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="vendor/cm-chessboard/assets/chessboard.css">
+  <link rel="stylesheet" href="vendor/cm-chessboard/assets/extensions/markers/markers.css">
+  <link rel="stylesheet" href="vendor/cm-chessboard/assets/extensions/arrows/arrows.css">
+  <link rel="stylesheet" href="vendor/cm-chessboard/assets/extensions/promotion-dialog/promotion-dialog.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="vendor/chess.js/chess.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="inner">
+      <a class="brand" href="index.html"><img src="img/favicon.svg" alt="" width="26" height="26"><span>Chess Trainer</span></a>
+      <nav class="nav" aria-label="Main"><a href="index.html">Home</a><a href="puzzles.html">Puzzles</a><a href="openings.html">Openings</a><a href="bestmove.html">Best Move</a><a href="simulator.html">Simulator</a><a href="play.html">Play</a><a href="history.html" aria-current="page">History</a><a href="stats.html">Stats</a></nav>
+    </div>
+  </header>
+  <main>
+    <div class="trainer">
+      <div class="board-col"><div class="board-wrap"><div id="board" class="board"></div></div></div>
+      <aside class="side">
+        <div class="panel">
+          <h3>Your games</h3>
+          <p class="small muted" id="hist-summary" style="margin:0 0 10px"></p>
+          <div class="game-list-h" id="game-list"></div>
+        </div>
+        <div class="panel hidden" id="review">
+          <h3 id="review-title">Game review</h3>
+          <div id="review-progress" class="small muted"></div>
+          <div class="progress hidden" id="review-bar" style="margin-top:6px"><span style="width:0"></span></div>
+          <div id="review-body"></div>
+          <div class="btn-row" style="margin-top:14px">
+            <button class="btn sm danger" id="btn-delete">Delete this game</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+  <footer class="site">Chess Trainer · Engine: Stockfish 17.1 (GPLv3) · Progress is saved in this browser only.</footer>
+  <script type="module" src="js/history.js"></script>
+</body>
+</html>

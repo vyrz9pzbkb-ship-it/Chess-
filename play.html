@@ -18,13 +18,17 @@
   <header class="site-header">
     <div class="inner">
       <a class="brand" href="index.html"><img src="img/favicon.svg" alt="" width="26" height="26"><span>Chess Trainer</span></a>
-      <nav class="nav" aria-label="Main"><a href="index.html">Home</a><a href="puzzles.html">Puzzles</a><a href="openings.html">Openings</a><a href="bestmove.html">Best Move</a><a href="simulator.html">Simulator</a><a href="play.html" aria-current="page">Play</a><a href="stats.html">Stats</a></nav>
+      <nav class="nav" aria-label="Main"><a href="index.html">Home</a><a href="puzzles.html">Puzzles</a><a href="openings.html">Openings</a><a href="bestmove.html">Best Move</a><a href="simulator.html">Simulator</a><a href="play.html" aria-current="page">Play</a><a href="history.html">History</a><a href="stats.html">Stats</a></nav>
     </div>
   </header>
   <main>
     <div class="trainer">
       <div class="board-col">
-        <div class="board-wrap"><div id="board" class="board"></div></div>
+        <div class="board-wrap">
+          <div class="clock hidden" id="clock-top"><span class="who" id="clock-top-name">Bot</span><span class="time" id="clock-top-time">10:00</span></div>
+          <div id="board" class="board"></div>
+          <div class="clock hidden" id="clock-bottom"><span class="who">You</span><span class="time" id="clock-bottom-time">10:00</span></div>
+        </div>
       </div>
       <aside class="side">
         <div class="panel" id="setup">
@@ -36,35 +40,41 @@
               <button data-color="b" aria-pressed="false">Black</button>
             </div>
           </label>
-          <label class="field"><span>Bot level</span>
-            <div class="levels" id="levels"></div>
+          <label class="field"><span>Bot rating</span>
+            <div class="levels" id="levels" style="grid-template-columns:repeat(5,1fr)"></div>
           </label>
           <p class="small muted" id="level-desc" style="min-height:2.8em">&nbsp;</p>
+          <label class="field"><span>Clock</span>
+            <div class="seg" role="group" aria-label="Time control" id="tc-seg">
+              <button data-tc="0" aria-pressed="true">None</button>
+              <button data-tc="5+3" aria-pressed="false">5+3</button>
+              <button data-tc="10+5" aria-pressed="false">10+5</button>
+              <button data-tc="15+10" aria-pressed="false">15+10</button>
+            </div>
+          </label>
+          <p class="small muted">As White the bot usually meets 1.d4 with normal London replies; as Black it usually opens 1.e4 so you can play the Caro-Kann.</p>
           <button class="btn primary" id="btn-start" style="width:100%">Start game</button>
+          <p class="small" style="margin:10px 0 0"><a href="history.html">Your games and reviews →</a></p>
         </div>
         <div class="panel hidden" id="game">
           <div id="status" class="status"><span class="dot"></span><span id="status-text">&nbsp;</span></div>
           <p class="small muted" id="game-meta" style="margin:10px 0 12px">&nbsp;</p>
-          <div class="btn-row">
+          <div class="btn-row" id="game-buttons">
             <button class="btn" id="btn-undo">Undo</button>
             <button class="btn" id="btn-hint">Hint</button>
             <button class="btn danger" id="btn-resign">Resign</button>
           </div>
           <div class="btn-row" style="margin-top:8px">
-            <button class="btn primary hidden" id="btn-review">Review game</button>
             <button class="btn" id="btn-new">New game</button>
           </div>
         </div>
         <div class="panel hidden" id="review">
           <h3>Game review</h3>
           <div id="review-progress" class="small muted"></div>
-          <div id="review-summary"></div>
-          <div class="evalbar-wrap" id="review-chart"></div>
-          <div class="review-list" id="review-list"></div>
-          <div class="note hidden" id="review-note" style="margin-top:10px"></div>
-          <button class="btn sm hidden" id="btn-review-final" style="margin-top:10px">Back to final position</button>
+          <div class="progress hidden" id="review-bar" style="margin-top:6px"><span style="width:0"></span></div>
+          <div id="review-body"></div>
         </div>
-        <div class="panel">
+        <div class="panel" id="moves-panel">
           <h3>Moves</h3>
           <div class="moves" id="moves"></div>
         </div>

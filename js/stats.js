@@ -1,6 +1,6 @@
 import * as store from './storage.js';
 import { $, $$, el, sparkline, fetchJSON } from './ui.js';
-import { LEVELS } from './levels.js';
+import { BOT_ELOS } from './levels.js';
 
 const THEME_LABEL = {
   mateIn1: 'Mate in 1', mateIn2: 'Mate in 2', mateIn3: 'Mate in 3', fork: 'Fork', pin: 'Pin',
@@ -96,26 +96,45 @@ function render() {
   }).catch(() => $('#sim-table').replaceChildren(row(['Could not load the simulator data.'])));
 
   /* bot */
-  const tot = { w: 0, l: 0, d: 0 };
-  for (const r of Object.values(b.levels)) { tot.w += r.w; tot.l += r.l; tot.d += r.d; }
+  const byElo = b.elo || {};
+  const all = [...Object.values(byElo), ...Object.values(b.levels)];
+  const tot = all.reduce((a, r) => ({ w: a.w + r.w, l: a.l + r.l, d: a.d + r.d }), { w: 0, l: 0, d: 0 });
   const games = tot.w + tot.l + tot.d;
-  const beaten = Object.entries(b.levels).filter(([, r]) => r.w > 0).map(([k]) => +k);
+  const beaten = Object.entries(byElo).filter(([, r]) => r.w > 0).map(([k]) => +k);
+  const saved = store.load('games', store.GAMES_DEFAULTS).games;
+  const reviewed = saved.filter(g => g.review && g.review.accuracy != null);
+  const avgAcc = reviewed.length ? Math.round(reviewed.reduce((s2, g) => s2 + g.review.accuracy, 0) / reviewed.length) : null;
+  const last10 = reviewed.slice(-10);
+  const recent = last10.length ? Math.round(last10.reduce((s2, g) => s2 + g.review.accuracy, 0) / last10.length) : null;
   $('#bot-stats').replaceChildren(
     stat(games, 'Games played'),
-    stat(tot.w, 'Wins'),
-    stat(tot.l, 'Losses'),
-    stat(tot.d, 'Draws'),
+    stat(`${tot.w}-${tot.l}-${tot.d}`, 'Wins - losses - draws'),
     stat(pct(tot.w, games), 'Win rate'),
-    stat(beaten.length ? Math.max(...beaten) : '–', 'Highest level beaten'),
+    stat(beaten.length ? Math.max(...beaten) : '–', 'Highest rating beaten'),
+    stat(avgAcc == null ? '–' : avgAcc + '%', 'Average accuracy'),
+    stat(recent == null ? '–' : recent + '%', 'Accuracy, last 10 games'),
   );
-  $('#bot-table').replaceChildren(
-    row(['Level', '≈ Rating', 'W', 'L', 'D', 'Win %', ''], true),
-    ...Object.keys(LEVELS).map((n) => {
-      const r = b.levels[n] || { w: 0, l: 0, d: 0 };
+  // accuracy trend over time
+  const trend = $('#acc-chart');
+  if (reviewed.length > 1) {
+    trend.replaceChildren(sparkline(reviewed.map(g => g.review.accuracy)),
+      el('p', { class: 'small muted', style: 'margin:6px 0 0' }, `${reviewed.length} reviewed games, oldest on the left. Latest: ${reviewed[reviewed.length - 1].review.accuracy}%.`));
+  } else {
+    trend.replaceChildren(el('p', { class: 'muted small' }, 'Finish two or more games against the bot to see your accuracy trend.'));
+  }
+  const blunders = reviewed.reduce((s2, g) => s2 + g.review.counts.Blunder, 0);
+  const mistakes = reviewed.reduce((s2, g) => s2 + g.review.counts.Mistake, 0);
+  $('#acc-note').textContent = reviewed.length ? `Per game: ${(blunders / reviewed.length).toFixed(1)} blunders and ${(mistakes / reviewed.length).toFixed(1)} mistakes on average.` : '';
+  const rows = [row(['Bot rating', 'W', 'L', 'D', 'Win %', ''], true),
+    ...BOT_ELOS.map((e) => {
+      const r = byElo[e] || { w: 0, l: 0, d: 0 };
       const g = r.w + r.l + r.d;
-      return row([`Level ${n}`, String(LEVELS[n].elo), String(r.w), String(r.l), String(r.d), pct(r.w, g), bar(r.w, g)]);
-    }),
-  );
+      return row([String(e), String(r.w), String(r.l), String(r.d), pct(r.w, g), bar(r.w, g)]);
+    })];
+  const old = Object.values(b.levels).reduce((a, r) => ({ w: a.w + r.w, l: a.l + r.l, d: a.d + r.d }), { w: 0, l: 0, d: 0 });
+  const og = old.w + old.l + old.d;
+  if (og) rows.push(row(['Earlier games (levels 1-10)', String(old.w), String(old.l), String(old.d), pct(old.w, og), bar(old.w, og)]));
+  $('#bot-table').replaceChildren(...rows);
 
   /* openings */
   fetchJSON('data/openings.json').then((ops) => {
@@ -140,9 +159,10 @@ function render() {
 
 $$('[data-reset]').forEach(btn => btn.addEventListener('click', () => {
   const what = btn.dataset.reset;
-  const label = { bot: 'bot game', puzzles: 'puzzle', openings: 'opening', bestmove: 'Best Move', sim: 'Opening Simulator' }[what];
+  const label = { bot: 'bot game (and saved game history)', puzzles: 'puzzle', openings: 'opening', bestmove: 'Best Move', sim: 'Opening Simulator' }[what];
   if (!confirm(`Reset all ${label} statistics? This cannot be undone.`)) return;
   store.clear(what);
+  if (what === 'bot') store.clear('games');
   render();
 }));
 

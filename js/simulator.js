@@ -1,12 +1,12 @@
 import { Board, ARROW, MARK, uciToMove, moveToUci } from './board.js';
 import { Engine } from './engine.js';
-import { LEVELS } from './levels.js';
+import { botConfig } from './levels.js';
 import { describeThreat } from './explain.js';
 import * as store from './storage.js';
 import { $, $$, el, toast, sleep, fetchJSON } from './ui.js';
 
 /* Stockfish strength after the opening -> bot level (see js/levels.js) */
-const STRENGTHS = { 400: 2, 600: 3, 800: 4, 1000: 5, 1200: 6, 1500: 7 };
+const STRENGTHS = { 400: 1, 600: 1, 800: 1, 1000: 1, 1200: 1, 1500: 1 };
 const BOX_INTERVAL = [0, 1, 2, 4, 8, 16];   // sessions until a line is due again, by box
 
 const board = new Board($('#board'));
@@ -318,13 +318,13 @@ async function playStep(t) {
   if (checkOver()) return;
   if (game.turn() === side) { setStatus('Your move. Follow one of the plans below.', 'turn-' + side); return; }
   setStatus('Stockfish is thinking…', 'turn-' + game.turn());
-  const cfg = LEVELS[STRENGTHS[sim.level]];
+  const cfg = botConfig(sim.level);
   const started = performance.now();
   let uci;
   const legal = game.moves({ verbose: true });
   if (Math.random() < cfg.random) uci = moveToUci(legal[Math.floor(Math.random() * legal.length)]);
   else {
-    const res = await getEngine().analyse(game.fen(), { depth: cfg.depth, movetime: cfg.movetime, skill: cfg.skill });
+    const res = await getEngine().analyse(game.fen(), { depth: cfg.depth, movetime: cfg.movetime, skill: cfg.skill, elo: cfg.elo || 0 });
     uci = res.bestmove || moveToUci(legal[0]);
   }
   const wait = 400 - (performance.now() - started);
