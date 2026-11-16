@@ -15,7 +15,7 @@ const dir = process.argv[2];
 const TARGET = +(process.argv[3] || 120);
 if (!dir) { console.error('usage: node tools/build-bestmove.js <pgn-dir> [count]'); process.exit(1); }
 
-let seed = 20261116;
+let seed = +(process.env.SEED || 20261116);
 const rand = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const uci = m => m.from + m.to + (m.promotion || '');
@@ -43,14 +43,19 @@ function sacrifice(fen, m) {
   const pool = [];
   for (const f of files) {
     const games = parsePgnFile(path.join(dir, f)).filter(g => !g.headers.FEN && g.sans.length >= 50);
-    shuffle(games).slice(0, 40).forEach(g => pool.push({ ...g, file: f }));
+    shuffle(games).slice(0, +(process.env.PER_FILE || 40)).forEach(g => pool.push({ ...g, file: f }));
   }
   shuffle(pool);
   console.error(`scanning ${pool.length} games`);
-  const found = [];
-  const usedGames = new Set();
+  // MERGE=1 keeps the positions already in data/bestmove.json and adds new ones
+  const OUT = path.join(__dirname, '../data/bestmove.json');
+  const found = process.env.MERGE && fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, 'utf8')).map(({ id, ...r }) => r) : [];
+  const usedGames = new Set(found.map(p => JSON.stringify([p.source.white, p.source.black, p.source.year, p.source.move])));
+  const seenFens = new Set(found.map(p => p.fen));
+  const startCount = found.length;
   for (const game of pool) {
     if (found.length >= TARGET * 1.4) break;
+    if (found.length - startCount >= +(process.env.MAX_NEW || 1e9)) break;
     const key = JSON.stringify([game.headers.White, game.headers.Black, game.headers.Date, game.headers.Round]);
     if (usedGames.has(key)) continue;
     const g = new Chess();
@@ -59,7 +64,7 @@ function sacrifice(fen, m) {
     for (const san of game.sans) { const mv = g.move(san, { sloppy: true }); if (!mv) { ok = false; break; } fens.push({ fen: g.fen(), last: mv }); }
     if (!ok) continue;
     // candidate plies: moves 12..35, middlegame material
-    const cands = shuffle(fens.map((x, i) => ({ ...x, ply: i + 1 })).filter(x => x.ply >= 22 && x.ply <= 70)).slice(0, 4);
+    const cands = shuffle(fens.map((x, i) => ({ ...x, ply: i + 1 })).filter(x => x.ply >= 22 && x.ply <= 70 && !seenFens.has(x.fen))).slice(0, +(process.env.PLIES || 4));
     for (const c of cands) {
       const pos = new Chess(c.fen);
       if (pos.in_check() || pos.game_over() || pos.moves().length < 12) continue;
@@ -116,10 +121,11 @@ function sacrifice(fen, m) {
     for (let i = 0; i < TARGET; i++) picked.push(found[Math.floor(i * found.length / TARGET)]);
   }
   picked.forEach((p, i) => { p.id = 'b' + String(i + 1).padStart(3, '0'); });
-  fs.writeFileSync(path.join(__dirname, '../data/bestmove.json'), JSON.stringify(picked.map(({ id, ...r }) => ({ id, ...r }))));
+  fs.writeFileSync(OUT, JSON.stringify(picked.map(({ id, ...r }) => ({ id, ...r }))));
   console.error('wrote data/bestmove.json', picked.length);
 
   /* ---------- Guess the Move ---------- */
+  if (process.env.SKIP_GAMES) { e.quit(); return; }
   const all = files.flatMap(f => parsePgnFile(path.join(dir, f)));
   const outGames = [];
   for (const spec of GAMES) {
