@@ -72,6 +72,29 @@ function render() {
     ...GR.map(g => row([g, String(bm.grades[g] || 0), pct(bm.grades[g] || 0, bm.attempts), bar(bm.grades[g] || 0, bm.attempts)])),
   );
 
+  /* opening simulator */
+  const sim = store.load('sim', store.SIM_DEFAULTS);
+  fetchJSON('data/simulator.json').then((d) => {
+    const tiles = [];
+    for (const [id, op] of Object.entries(d.openings)) {
+      const o = sim.openings[id] || { moves: 0, correct: 0 };
+      const g = sim.games[id] || { w: 0, l: 0, d: 0 };
+      tiles.push(stat(pct(o.correct, o.moves), `${op.name} accuracy`));
+      tiles.push(stat(`${g.w}-${g.l}-${g.d}`, `${op.name}: W-L-D after the opening`));
+    }
+    $('#sim-stats').replaceChildren(...tiles);
+    const rows = [row(['Opponent reply', 'Tries', 'Accuracy', 'Box', ''], true)];
+    for (const [id, op] of Object.entries(d.openings)) {
+      rows.push(el('tr', {}, el('td', { colspan: 5, style: 'color:var(--muted);font-weight:700;padding-top:14px' }, op.name)));
+      const ls = d.lines.filter(l => l.opening === id).map(l => ({ l, s: sim.lines[l.id] }))
+        .sort((a, b) => (a.s ? a.s.correct / a.s.moves : 2) - (b.s ? b.s.correct / b.s.moves : 2));
+      for (const { l, s } of ls) {
+        rows.push(row([l.name, String(s ? s.attempts : 0), s ? pct(s.correct, s.moves) : '–', s ? `${s.box}/5` : '–', s ? bar(s.correct, s.moves) : '']));
+      }
+    }
+    $('#sim-table').replaceChildren(...rows);
+  }).catch(() => $('#sim-table').replaceChildren(row(['Could not load the simulator data.'])));
+
   /* bot */
   const tot = { w: 0, l: 0, d: 0 };
   for (const r of Object.values(b.levels)) { tot.w += r.w; tot.l += r.l; tot.d += r.d; }
@@ -117,7 +140,7 @@ function render() {
 
 $$('[data-reset]').forEach(btn => btn.addEventListener('click', () => {
   const what = btn.dataset.reset;
-  const label = { bot: 'bot game', puzzles: 'puzzle', openings: 'opening', bestmove: 'Best Move' }[what];
+  const label = { bot: 'bot game', puzzles: 'puzzle', openings: 'opening', bestmove: 'Best Move', sim: 'Opening Simulator' }[what];
   if (!confirm(`Reset all ${label} statistics? This cannot be undone.`)) return;
   store.clear(what);
   render();

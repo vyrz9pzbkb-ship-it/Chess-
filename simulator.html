@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Opening Simulator · Chess Trainer</title>
+  <meta name="description" content="Practise the London System and the Caro-Kann against a computer that varies its replies, then play on against Stockfish.">
+  <meta name="theme-color" content="#0e1013">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="vendor/cm-chessboard/assets/chessboard.css">
+  <link rel="stylesheet" href="vendor/cm-chessboard/assets/extensions/markers/markers.css">
+  <link rel="stylesheet" href="vendor/cm-chessboard/assets/extensions/arrows/arrows.css">
+  <link rel="stylesheet" href="vendor/cm-chessboard/assets/extensions/promotion-dialog/promotion-dialog.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="vendor/chess.js/chess.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="inner">
+      <a class="brand" href="index.html"><img src="img/favicon.svg" alt="" width="26" height="26"><span>Chess Trainer</span></a>
+      <nav class="nav" aria-label="Main"><a href="index.html">Home</a><a href="puzzles.html">Puzzles</a><a href="openings.html">Openings</a><a href="bestmove.html">Best Move</a><a href="simulator.html" aria-current="page">Simulator</a><a href="play.html">Play</a><a href="stats.html">Stats</a></nav>
+    </div>
+  </header>
+  <main>
+    <div class="trainer">
+      <div class="board-col"><div class="board-wrap"><div id="board" class="board"></div></div></div>
+      <aside class="side">
+        <div class="panel" id="setup">
+          <h3>Opening Simulator</h3>
+          <div class="seg" role="group" aria-label="Opening" id="opening-seg">
+            <button data-op="london" aria-pressed="true">London (White)</button>
+            <button data-op="caro" aria-pressed="false">Caro-Kann (Black)</button>
+          </div>
+          <p class="small muted" id="op-blurb" style="margin:10px 0 12px">&nbsp;</p>
+          <label class="field"><span>Stockfish strength after the opening</span>
+            <div class="levels" id="sim-levels" style="grid-template-columns:repeat(6,1fr)"></div>
+          </label>
+          <div class="btn-row">
+            <button class="btn primary" id="btn-start">Start</button>
+            <button class="btn" id="btn-drill" title="Practise the line you get wrong most">Drill weakest line</button>
+          </div>
+        </div>
+
+        <div class="panel hidden" id="game">
+          <div id="status" class="status"><span class="dot"></span><span id="status-text">&nbsp;</span></div>
+          <div id="watch" class="watch hidden" role="alert"><b>Watch out!</b> <span id="watch-text"></span></div>
+          <div class="note hidden" id="feedback" style="margin-top:12px;min-height:0"></div>
+          <p class="small muted" id="game-meta" style="margin:10px 0 0">&nbsp;</p>
+          <div class="progress" style="margin-top:10px"><span id="book-progress" style="width:0"></span></div>
+          <div class="btn-row" style="margin-top:12px">
+            <button class="btn" id="btn-hint">Show move</button>
+            <button class="btn" id="btn-restart">Restart line</button>
+            <button class="btn danger hidden" id="btn-resign">Resign</button>
+          </div>
+          <div class="btn-row" style="margin-top:8px">
+            <button class="btn primary" id="btn-next">Next line</button>
+            <button class="btn" id="btn-setup">Change opening</button>
+          </div>
+        </div>
+
+        <div class="panel hidden" id="plans">
+          <h3>Middlegame plans: <span id="plans-name"></span></h3>
+          <ol class="plans" id="plans-list"></ol>
+        </div>
+
+        <div class="panel">
+          <h3>Moves</h3>
+          <div class="moves" id="moves"></div>
+        </div>
+
+        <div class="panel">
+          <h3>Your accuracy</h3>
+          <dl class="kv" id="acc-summary"></dl>
+          <p class="small muted" style="margin:12px 0 6px">Lines you get wrong come back more often. Weakest first:</p>
+          <div class="review-list" id="line-list"></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+  <footer class="site">Chess Trainer · Engine: Stockfish 17.1 (GPLv3) · Progress is saved in this browser only.</footer>
+  <script type="module" src="js/simulator.js"></script>
+</body>
+</html>

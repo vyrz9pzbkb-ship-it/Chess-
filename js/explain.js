@@ -177,3 +177,16 @@ export function explainMove(Chess, fen, uci, line = {}) {
   if (cp <= -150) return 'It is the toughest defence; everything else loses faster.';
   return `It's a quiet move that improves the ${piece}; the alternatives are clearly weaker.`;
 }
+
+/**
+ * What does the side that just moved threaten now? Returns a short sentence for
+ * the player to move, or '' if nothing urgent (mate in one or a winning capture).
+ */
+export function describeThreat(Chess, fen) {
+  const g = flipTurn(Chess, fen);
+  if (!g || new Chess(fen).in_check()) return '';
+  const t = immediateThreat(Chess, g);
+  if (!t) return '';
+  if (t.mate) return `Your opponent threatens ${t.move.san}, checkmate!`;
+  return `Your ${NAME[t.move.captured]} on ${t.move.to} is under attack.`;
+}

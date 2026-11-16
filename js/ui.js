@@ -54,3 +54,10 @@ export function sparkline(values, { width = 320, height = 80, stroke = 'var(--ac
   svg.append(path);
   return svg;
 }
+
+// On narrow screens the nav scrolls sideways: keep the current page's link visible.
+try {
+  const cur = document.querySelector('.nav [aria-current="page"]');
+  const nav = cur && cur.parentElement;
+  if (nav && nav.scrollWidth > nav.clientWidth) nav.scrollLeft = cur.offsetLeft - (nav.clientWidth - cur.offsetWidth) / 2;
+} catch (e) { /* ignore */ }

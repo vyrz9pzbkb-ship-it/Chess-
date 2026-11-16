@@ -57,6 +57,14 @@ export const BESTMOVE_DEFAULTS = {
   },
 };
 
+export const SIM_DEFAULTS = {
+  session: 0,           // increments every time a line starts (spaced-repetition clock)
+  level: 800,           // Stockfish strength after the opening
+  openings: {},         // openingId -> {moves, correct, lines}
+  lines: {},            // lineId -> {attempts, moves, correct, box, due, perfect, last}
+  games: {},            // openingId -> {w, l, d} after the opening
+};
+
 export const SETTINGS_DEFAULTS = {
   botLevel: 3,
   botColor: 'w',

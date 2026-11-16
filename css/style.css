@@ -305,3 +305,15 @@ footer.site { text-align: center; color: var(--faint); font-size: .82rem; paddin
 .game-list { display: flex; flex-direction: column; gap: 4px; max-height: 320px; overflow-y: auto; }
 .points { font-size: 1.6rem; font-weight: 800; font-variant-numeric: tabular-nums; }
 .kind-miss { color: var(--danger); font-weight: 700; }
+
+/* ---------- opening simulator ---------- */
+.watch {
+  margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-size: .94rem;
+  background: rgba(232,176,75,.12); border: 1px solid rgba(232,176,75,.45); color: #f3d79a;
+}
+.watch b { color: var(--warn); margin-right: 4px; }
+.plans { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 10px; }
+.plans li b { display: block; }
+.plans li span { color: var(--muted); font-size: .92rem; }
+.line-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.line-row .meta { color: var(--faint); font-size: .8rem; }
