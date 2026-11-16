@@ -317,3 +317,16 @@ footer.site { text-align: center; color: var(--faint); font-size: .82rem; paddin
 .plans li span { color: var(--muted); font-size: .92rem; }
 .line-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .line-row .meta { color: var(--faint); font-size: .8rem; }
+
+.plan-box {
+  margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-size: .94rem;
+  background: rgba(106,167,240,.12); border: 1px solid rgba(106,167,240,.45); color: #cfe2fb;
+}
+.plan-box b { color: var(--info); margin-right: 4px; }
+.setup-list { margin: 12px 0 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 4px; font-size: .92rem; }
+.setup-list li { padding: 4px 6px; border-radius: 6px; cursor: pointer; color: var(--muted); }
+.setup-list li b { color: var(--text); margin-right: 6px; }
+.setup-list li.cur { background: var(--accent-soft); }
+.setup-list li.cur b { color: var(--accent); }
+.plan-examples { margin: 6px 0 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 6px; font-size: .9rem; color: var(--muted); }
+.plan-examples b { color: var(--text); }

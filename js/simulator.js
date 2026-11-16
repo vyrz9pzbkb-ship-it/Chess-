@@ -1,4 +1,4 @@
-import { Board, ARROW, uciToMove, moveToUci } from './board.js';
+import { Board, ARROW, MARK, uciToMove, moveToUci } from './board.js';
 import { Engine } from './engine.js';
 import { LEVELS } from './levels.js';
 import { describeThreat } from './explain.js';
@@ -40,6 +40,12 @@ function showWatch(text) {
   $('#watch').classList.toggle('hidden', !text);
   $('#watch-text').textContent = text || '';
 }
+function showPlan(text) {
+  $('#plan').classList.toggle('hidden', !text);
+  $('#plan-text').textContent = cap((text || '').replace(/^Change of plan:\s*/, ''));
+}
+const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
+const why = node => cap((node.p || node.n || '').replace(/^Change of plan:\s*/, ''));
 function showFeedback(parts, kind) {
   const f = $('#feedback');
   if (!parts) { f.classList.add('hidden'); return; }
@@ -171,7 +177,9 @@ async function startLine(drillId = null) {
   $('#btn-hint').disabled = false;
   $('#btn-resign').classList.add('hidden');
   showWatch('');
+  showPlan('');
   showFeedback(null);
+  $('#learn').classList.add('hidden');
   $('#game-meta').textContent = drillId ? `Drilling: ${lineById(drillId).name}` : `${opening().name} · you play ${sideName(side)}`;
   await board.setOrientation(side);
   await board.sync(game, false);
@@ -192,7 +200,9 @@ async function bookStep(t) {
   if (game.turn() === side) {
     attempt.missedHere = false;
     const num = Math.ceil((game.history().length + 1) / 2);
-    setStatus(`Move ${num}: play your ${opening().name} move.`, 'turn-' + side);
+    const next = node.c[0];
+    showPlan(next.p || '');
+    setStatus(next.p ? `Move ${num}: the plan changes here. Find the right move.` : `Move ${num}: play your next setup move.`, 'turn-' + side);
     return;
   }
   await sleep(game.history().length ? 550 : 300);
@@ -219,13 +229,14 @@ async function onUserMove(move) {
     setTimeout(() => board.arrow(ARROW.hint, m.from, m.to), 30);
     $('#board').classList.add('shake');
     setTimeout(() => $('#board').classList.remove('shake'), 300);
-    showFeedback([el('span', { class: 'san', style: 'color:var(--danger)' }, `Not ${move.san}.`), `Play ${expected.m}: ${expected.n}`], 'bad');
+    showFeedback([el('span', { class: 'san', style: 'color:var(--danger)' }, `Not ${move.san}.`), `Play ${expected.m}: ${why(expected)}`], 'bad');
     setStatus(`Play ${expected.m} (follow the arrow).`, 'bad');
     return false;
   }
   if (!attempt.missedHere) { attempt.moves++; attempt.correct++; }
-  showFeedback([el('span', { class: 'san' }, `✓ ${expected.m}`), expected.n]);
+  showFeedback([el('span', { class: 'san' }, `✓ ${expected.m}`), why(expected)]);
   showWatch('');
+  showPlan('');
   node = expected;
   renderMoves();
   bookStep(token);
@@ -239,12 +250,13 @@ function showMoveHint() {
     const m = uciToMove(e.u);
     board.clearArrows();
     board.arrow(ARROW.hint, m.from, m.to);
-    showFeedback([el('span', { class: 'san' }, e.m), e.n]);
+    showFeedback([el('span', { class: 'san' }, e.m), why(e)]);
     setStatus(`Play ${e.m} on the board.`, 'info');
   } else if (phase === 'play') playHint();
 }
 
 function finishBook() {
+  showPlan('');
   const lineId = node.l[0];
   const line = lineById(lineId);
   familyOfLine = line.family;
@@ -349,6 +361,64 @@ async function playHint() {
   setStatus(`Stockfish suggests ${san}.`, 'info');
 }
 
+/* ---------------- learn mode ---------------- */
+let learnStep = 0;
+function flipTurn(g) {
+  const parts = g.fen().split(' ');
+  parts[1] = parts[1] === 'w' ? 'b' : 'w'; parts[3] = '-';
+  g.load(parts.join(' '));
+}
+function startLearn() {
+  token++;
+  if (engine) engine.stop();
+  phase = 'learn';
+  side = opening().side;
+  board.disableInput();
+  $('#setup').classList.add('hidden');
+  $('#game').classList.add('hidden');
+  $('#plans').classList.add('hidden');
+  $('#learn').classList.remove('hidden');
+  $('#learn-name').textContent = opening().name;
+  const steps = data.setup[openingId];
+  $('#learn-list').replaceChildren(...steps.map((s, i) => el('li', { onclick: () => showLearn(i + 1) }, el('b', {}, s.san), s.why)));
+  // real examples of changes of plan, taken from the move tree
+  const seen = new Set();
+  const examples = [];
+  (function walk(n) {
+    for (const c of n.c) {
+      if (c.p && !seen.has(c.m) && examples.length < 6) { seen.add(c.m); examples.push(c); }
+      walk(c);
+    }
+  })(data.trees[openingId]);
+  $('#learn-changes').replaceChildren(...examples.map(c => el('li', {}, el('b', {}, c.m + ': '), why(c))));
+  board.setOrientation(side);
+  showLearn(0);
+}
+async function showLearn(n) {
+  const steps = data.setup[openingId];
+  learnStep = Math.max(0, Math.min(steps.length, n));
+  const g = new Chess();
+  if (side === 'b') flipTurn(g);
+  for (let i = 0; i < learnStep; i++) { g.move({ from: steps[i].uci.slice(0, 2), to: steps[i].uci.slice(2, 4) }); flipTurn(g); }
+  await board.cb.setPosition(g.fen(), true);
+  board.clearArrows();
+  board.unmark(MARK.last);
+  if (learnStep > 0) {
+    const st = steps[learnStep - 1];
+    board.mark(MARK.last, st.uci.slice(0, 2)); board.mark(MARK.last, st.uci.slice(2, 4));
+  }
+  if (learnStep < steps.length) {
+    const nx = steps[learnStep];
+    board.arrow(ARROW.hint, nx.uci.slice(0, 2), nx.uci.slice(2, 4));
+  }
+  $('#learn-note').replaceChildren(learnStep === 0
+    ? `Your ${opening().name} setup has ${steps.length} moves. Press ▶ to see them one by one (the opponent's moves are left out, so you see only your own plan).`
+    : el('span', {}, el('span', { class: 'san' }, `${learnStep}. ${steps[learnStep - 1].san}`), steps[learnStep - 1].why));
+  $$('#learn-list li').forEach((li, i) => li.classList.toggle('cur', i === learnStep - 1));
+  $('#learn-prev').disabled = learnStep === 0;
+  $('#learn-next').disabled = learnStep === steps.length;
+}
+
 /* ---------------- wiring ---------------- */
 $$('#opening-seg button').forEach(b => b.addEventListener('click', () => {
   openingId = b.dataset.op;
@@ -360,6 +430,21 @@ $$('#opening-seg button').forEach(b => b.addEventListener('click', () => {
 function settingsSave() { const s = store.load('settings', store.SETTINGS_DEFAULTS); s.simOpening = openingId; store.save('settings', s); }
 
 $('#btn-start').addEventListener('click', () => startLine());
+$('#btn-learn').addEventListener('click', startLearn);
+$('#learn-prev').addEventListener('click', () => showLearn(learnStep - 1));
+$('#learn-next').addEventListener('click', () => showLearn(learnStep + 1));
+$('#learn-quiz').addEventListener('click', () => startLine());
+$('#learn-back').addEventListener('click', () => {
+  $('#learn').classList.add('hidden');
+  $('#setup').classList.remove('hidden');
+  phase = 'setup';
+  board.sync(new Chess(), false);
+});
+document.addEventListener('keydown', (e) => {
+  if (phase !== 'learn' || e.target.closest('select, input')) return;
+  if (e.key === 'ArrowRight') showLearn(learnStep + 1);
+  if (e.key === 'ArrowLeft') showLearn(learnStep - 1);
+});
 $('#btn-drill').addEventListener('click', () => {
   const w = weakestLines().find(x => x.acc !== null && x.acc < 1) || weakestLines().find(x => x.acc === null);
   if (!w) { toast('Every line here is perfect so far. Starting a random line.'); return startLine(); }
