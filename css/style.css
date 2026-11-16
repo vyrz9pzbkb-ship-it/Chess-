@@ -98,7 +98,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 20px 16px 48px; }
   .site-header .inner { gap: 8px; padding: 0 10px; }
   .brand span { display: none; }
   .nav { margin-left: 0; }
-  .nav a { padding: 7px 8px; font-size: .9rem; }
+  .nav a { padding: 7px 7px; font-size: .86rem; }
 }
 
 /* ---------- controls ---------- */
@@ -278,3 +278,29 @@ footer.site { text-align: center; color: var(--faint); font-size: .82rem; paddin
 
 .board.shake { animation: shake .3s; }
 @keyframes shake { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+/* ---------- best move ---------- */
+.checklist { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.check-item {
+  appearance: none; font: inherit; color: var(--text); text-align: left; cursor: pointer;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px;
+  padding: 10px 12px; min-height: 48px; display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: .92rem;
+}
+.check-item .box {
+  flex: none; width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--faint);
+  display: grid; place-items: center; font-size: .8rem; color: var(--accent-ink);
+}
+.check-item[aria-pressed="true"] { border-color: rgba(92,192,138,.5); background: var(--accent-soft); }
+.check-item[aria-pressed="true"] .box { background: var(--accent); border-color: var(--accent); }
+.check-item:disabled { cursor: default; opacity: .7; }
+.grade { display: inline-block; font-weight: 800; font-size: 1.15rem; padding: 4px 12px; border-radius: 999px; }
+.grade.best { background: var(--accent-soft); color: var(--accent); }
+.grade.good { background: rgba(139,209,124,.14); color: #a3dc96; }
+.grade.inaccuracy { background: rgba(232,176,75,.14); color: var(--warn); }
+.grade.mistake { background: rgba(240,136,62,.15); color: #f0883e; }
+.grade.blunder { background: var(--danger-soft); color: var(--danger); }
+.result-line { margin-top: 10px; font-size: .95rem; }
+.result-line b { font-variant-numeric: tabular-nums; }
+.game-list { display: flex; flex-direction: column; gap: 4px; max-height: 320px; overflow-y: auto; }
+.points { font-size: 1.6rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.kind-miss { color: var(--danger); font-weight: 700; }

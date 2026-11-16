@@ -20,3 +20,8 @@ $('#meta-play').textContent = tot.w + tot.l + tot.d
   : 'Levels 1 to 10';
 
 $('#meta-stats').textContent = p.bestStreak ? `Best puzzle streak: ${p.bestStreak}` : 'Track your progress';
+
+const bm = store.load('bestmove', store.BESTMOVE_DEFAULTS);
+$('#meta-bestmove').textContent = bm.attempts
+  ? `Rating ${Math.round(bm.rating)} · ${bm.attempts} positions`
+  : '120 positions · 12 famous games';

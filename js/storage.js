@@ -40,6 +40,23 @@ export const BOT_DEFAULTS = {
   games: [],            // recent games: {level, color, result, moves, at}
 };
 
+export const BESTMOVE_DEFAULTS = {
+  rating: 1000,         // Find the Best Move rating
+  attempts: 0,          // rated positions
+  history: [1000],
+  grades: {},           // grade -> count (rated attempts)
+  results: {},          // positionId -> {grade, at}
+  kinds: {},            // check|capture|quiet -> {seen, missed} (both modes)
+  guess: {
+    moves: 0,           // guesses made
+    points: 0,
+    maxPoints: 0,
+    master: 0,          // guesses that matched the master
+    top3: 0,            // guesses in the engine's top 3 (not the master move)
+    games: {},          // gameId -> {best, max, plays}
+  },
+};
+
 export const SETTINGS_DEFAULTS = {
   botLevel: 3,
   botColor: 'w',

@@ -37,6 +37,41 @@ function render() {
     }),
   );
 
+  /* best move */
+  const bm = store.load('bestmove', store.BESTMOVE_DEFAULTS);
+  const gq = Object.assign({}, store.BESTMOVE_DEFAULTS.guess, bm.guess);
+  const good = (bm.grades.Best || 0) + (bm.grades.Good || 0);
+  $('#bm-stats').replaceChildren(
+    stat(Math.round(bm.rating), 'Best Move rating'),
+    stat(Math.max(...bm.history), 'Peak rating'),
+    stat(pct(good, bm.attempts), 'Accuracy (Best or Good)'),
+    stat(bm.attempts, 'Positions rated'),
+    stat(pct(gq.points, gq.maxPoints), 'Guess the Move score'),
+    stat(`${gq.master}/${gq.moves}`, 'Master moves guessed'),
+  );
+  $('#bm-chart').replaceChildren(bm.history.length > 1
+    ? sparkline(bm.history)
+    : el('p', { class: 'muted small' }, 'Rate a few positions to see your graph.'));
+  const KINDS = { check: 'Checks', capture: 'Captures', quiet: 'Quiet moves' };
+  let worst = null;
+  $('#bm-kind-table').replaceChildren(
+    row(['Kind of best move', 'Seen', 'Missed', 'Miss rate', ''], true),
+    ...Object.keys(KINDS).map((k) => {
+      const r = bm.kinds[k] || { seen: 0, missed: 0 };
+      if (r.seen >= 3 && (!worst || r.missed / r.seen > worst.rate)) worst = { k, rate: r.missed / r.seen };
+      const b = el('div', { class: 'bar' }, el('span', { style: `width:${r.seen ? (100 * r.missed) / r.seen : 0}%;background:var(--danger)` }));
+      return row([KINDS[k], String(r.seen), String(r.missed), pct(r.missed, r.seen), b]);
+    }),
+  );
+  $('#bm-miss-note').textContent = worst
+    ? `You miss ${KINDS[worst.k].toLowerCase()} most often (${Math.round(worst.rate * 100)}%). Counts both modes: a miss is anything worse than Good, or a guess that wasn't the master's or engine's top move.`
+    : 'Play a few positions or guesses to see which kinds of moves you overlook.';
+  const GR = ['Best', 'Good', 'Inaccuracy', 'Mistake', 'Blunder'];
+  $('#bm-grade-table').replaceChildren(
+    row(['Grade', 'Count', 'Share', ''], true),
+    ...GR.map(g => row([g, String(bm.grades[g] || 0), pct(bm.grades[g] || 0, bm.attempts), bar(bm.grades[g] || 0, bm.attempts)])),
+  );
+
   /* bot */
   const tot = { w: 0, l: 0, d: 0 };
   for (const r of Object.values(b.levels)) { tot.w += r.w; tot.l += r.l; tot.d += r.d; }
@@ -82,7 +117,7 @@ function render() {
 
 $$('[data-reset]').forEach(btn => btn.addEventListener('click', () => {
   const what = btn.dataset.reset;
-  const label = what === 'bot' ? 'bot game' : what === 'puzzles' ? 'puzzle' : 'opening';
+  const label = { bot: 'bot game', puzzles: 'puzzle', openings: 'opening', bestmove: 'Best Move' }[what];
   if (!confirm(`Reset all ${label} statistics? This cannot be undone.`)) return;
   store.clear(what);
   render();

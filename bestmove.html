@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Best Move · Chess Trainer</title>
+  <meta name="description" content="Find the best move in real master middlegames, or guess the moves of famous games.">
+  <meta name="theme-color" content="#0e1013">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="vendor/cm-chessboard/assets/chessboard.css">
+  <link rel="stylesheet" href="vendor/cm-chessboard/assets/extensions/markers/markers.css">
+  <link rel="stylesheet" href="vendor/cm-chessboard/assets/extensions/arrows/arrows.css">
+  <link rel="stylesheet" href="vendor/cm-chessboard/assets/extensions/promotion-dialog/promotion-dialog.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="vendor/chess.js/chess.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="inner">
+      <a class="brand" href="index.html"><img src="img/favicon.svg" alt="" width="26" height="26"><span>Chess Trainer</span></a>
+      <nav class="nav" aria-label="Main"><a href="index.html">Home</a><a href="puzzles.html">Puzzles</a><a href="openings.html">Openings</a><a href="bestmove.html" aria-current="page">Best Move</a><a href="play.html">Play</a><a href="stats.html">Stats</a></nav>
+    </div>
+  </header>
+  <main>
+    <div class="trainer">
+      <div class="board-col"><div class="board-wrap"><div id="board" class="board"></div></div></div>
+      <aside class="side">
+        <div class="panel">
+          <div class="seg" role="group" aria-label="Mode">
+            <button id="mode-find" aria-pressed="true">Find the Best Move</button>
+            <button id="mode-guess" aria-pressed="false">Guess the Move</button>
+          </div>
+        </div>
+
+        <!-- Find the Best Move -->
+        <div class="panel" id="find-panel">
+          <div id="status" class="status"><span class="dot"></span><span id="status-text">Loading positions…</span></div>
+          <p class="small muted" id="find-meta" style="margin:10px 0 0">&nbsp;</p>
+          <div id="checklist-wrap">
+            <p class="small muted" style="margin:12px 0 0">Before you move, tap each question once you've looked at the board:</p>
+            <div class="checklist" id="checklist">
+              <button class="check-item" data-q="checks" aria-pressed="false"><span class="box">✓</span>Checks?</button>
+              <button class="check-item" data-q="captures" aria-pressed="false"><span class="box">✓</span>Captures?</button>
+              <button class="check-item" data-q="threats" aria-pressed="false"><span class="box">✓</span>Threats?</button>
+              <button class="check-item" data-q="opponent" aria-pressed="false"><span class="box">✓</span>What is he threatening?</button>
+            </div>
+          </div>
+          <div id="find-result" class="hidden" style="margin-top:12px">
+            <span id="grade" class="grade"></span>
+            <div class="result-line" id="result-moves"></div>
+            <div class="note" id="explanation" style="margin-top:10px;min-height:0"></div>
+            <p class="small muted" id="find-source" style="margin:10px 0 0"></p>
+          </div>
+          <div class="btn-row" style="margin-top:12px">
+            <button class="btn" id="btn-find-retry">Try again</button>
+            <button class="btn primary" id="btn-find-next">Next position</button>
+          </div>
+        </div>
+
+        <div class="panel" id="find-rating">
+          <h3>Best Move rating</h3>
+          <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:10px">
+            <span id="bm-rating" class="mono" style="font-size:2rem;font-weight:800">1000</span><span id="bm-delta" class="delta"></span>
+          </div>
+          <dl class="kv">
+            <dt>Accuracy (Best or Good)</dt><dd id="bm-acc">–</dd>
+            <dt>Positions done</dt><dd id="bm-done">0</dd>
+            <dt>Most missed</dt><dd id="bm-missed">–</dd>
+          </dl>
+        </div>
+
+        <!-- Guess the Move -->
+        <div class="panel hidden" id="guess-panel">
+          <h3 id="g-title">Choose a game</h3>
+          <p class="small muted" id="g-intro" style="margin:0 0 12px"></p>
+          <div id="g-status" class="status"><span class="dot"></span><span id="g-status-text">&nbsp;</span></div>
+          <div class="result-line" id="g-feedback" style="min-height:1.5em"></div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:10px">
+            <div><span class="points" id="g-points">0</span><span class="muted"> / <span id="g-max">0</span> points</span></div>
+            <div class="small muted" id="g-matches"></div>
+          </div>
+          <div class="progress" style="margin-top:10px"><span id="g-progress" style="width:0"></span></div>
+          <p class="small muted" style="margin:10px 0 0">Master's move: 5 points · engine's top choice: 4 · engine's 2nd or 3rd choice: 2.</p>
+          <div class="btn-row" style="margin-top:12px">
+            <button class="btn" id="btn-g-restart">Restart</button>
+            <button class="btn primary" id="btn-g-next">Next game</button>
+          </div>
+        </div>
+        <div class="panel hidden" id="guess-games">
+          <h3>Famous games</h3>
+          <div class="game-list" id="game-list"></div>
+        </div>
+        <div class="panel hidden" id="guess-moves">
+          <h3>Moves</h3>
+          <div class="moves" id="moves"></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+  <footer class="site">Chess Trainer · Engine: Stockfish 17.1 (GPLv3) · Progress is saved in this browser only.</footer>
+  <script type="module" src="js/bestmove.js"></script>
+</body>
+</html>
