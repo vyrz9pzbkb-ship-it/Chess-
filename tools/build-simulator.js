@@ -6,14 +6,15 @@
 // a recapture, then one of your setup moves played early, then moving the attacked
 // piece, then Stockfish's best move, and writes the reason from what the setup move
 // would have allowed. Write >Move{reason} in the source to choose it yourself.
-// UNNEEDED warns about a written change of plan where the setup move was fine.
+// UNNEEDED warns about a written change of plan where the setup move was fine;
+// write >>Move{reason} for a planned change (an answer to the opening itself).
 // Opponent moves missing from a line are filled in with Stockfish's choice.
 // Usage: node tools/build-simulator.js     (DEPTH=14 by default)
 const path = require('path');
 const fs = require('fs');
 const { Chess } = require('../vendor/chess.js/chess.js');
 const { Engine } = require('./engine');
-const { OPENINGS, PLANS, SETUP, LINES } = require('./simulator.src');
+const { OPENINGS, PLANS, SETUP, LINES, TIPS } = require('./simulator.src');
 
 const DEPTH = +(process.env.DEPTH || 14);
 const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -23,33 +24,36 @@ const uciOf = m => m.from + m.to + (m.promotion || '');
 
 function parse(src) {
   const out = [];
-  for (const m of src.matchAll(/>(\S+?)\{([^}]*)\}|\{!([^}]*)\}|(\S+)/g)) {
-    if (m[1]) out.push({ type: 'change', san: m[1], text: m[2].trim() });
-    else if (m[3] !== undefined) out.push({ type: 'watch', text: m[3].trim().replace(/^Watch out!\s*/, '') });
-    else out.push({ type: 'opp', san: m[4] });
+  for (const m of src.matchAll(/>(>?)(\S+?)\{([^}]*)\}|\{!([^}]*)\}|(\S+)/g)) {
+    if (m[2]) out.push({ type: 'change', san: m[2], text: m[3].trim(), planned: !!m[1] });
+    else if (m[4] !== undefined) out.push({ type: 'watch', text: m[4].trim().replace(/^Watch out!\s*/, '') });
+    else out.push({ type: 'opp', san: m[5] });
   }
   return out;
 }
 
 const ORIGINAL = { a: 'r', b: 'n', c: 'b', d: 'q', e: 'k', f: 'b', g: 'n', h: 'r' };
-/** Setup moves still to play, in order. A setup move whose piece has left its
- *  starting square some other way (captured, moved by a change of plan) is dropped. */
-function pending(g, setup, played, color) {
+/** Setup moves still to play, in order. A setup move whose piece is not on its
+ *  square (captured, moved by a change of plan) is skipped. A setup move with
+ *  `when: 'attacked'` (like Ba4 after ...a6) only counts while its piece is attacked. */
+function pending(g, setup, played, color, isAttacked = () => true) {
   const out = [];
   for (const s of setup) {
     if (played.has(s.uci)) continue;
     const from = s.uci.slice(0, 2);
     const p = g.get(from);
     const backRank = color === 'w' ? '1' : '8';
-    const want = from[1] === backRank ? ORIGINAL[from[0]] : 'p';
+    const want = s.piece || (from[1] === backRank ? ORIGINAL[from[0]] : 'p');
     if (!p || p.color !== color || p.type !== want) continue;
+    if (s.when === 'attacked' && !isAttacked(g.fen(), from)) continue;
     if (s.uci === 'e1g1' || s.uci === 'e8g8') {
       const rights = g.fen().split(' ')[2];
       if (!rights.includes(color === 'w' ? 'K' : 'k')) continue;
     }
     out.push(s);
   }
-  return out;
+  // an active conditional move (Ba4 after ...a6, Bb3 after ...b5) answers a threat: it comes first
+  return [...out.filter(s => s.when), ...out.filter(s => !s.when)];
 }
 
 (async () => {
@@ -115,7 +119,9 @@ function pending(g, setup, played, color) {
         else if (targets.length) what = `, attacking your ${targets[0]}`;
         else if (/\+/.test(r.san)) what = ' with check';
       }
-      why = `${def.san} would let ${opp} play ${r.san}${what}. Play ${pick.san} instead.`;
+      why = what
+        ? `${def.san} would let ${opp} play ${r.san}${what}. Play ${pick.san} instead.`
+        : `${def.san} is weaker here (Stockfish answers ${r.san} and ${opp} is better). Play ${pick.san} instead.`;
     } else {
       why = `${def.san} isn't possible here, so play ${pick.san} instead.`;
     }
@@ -138,7 +144,7 @@ function pending(g, setup, played, color) {
     let guard = 0;
     while (guard++ < 60) {
       if (g.turn() === side) {
-        const todo = pending(g, setup, played, side);
+        const todo = pending(g, setup, played, side, attacked);
         if (!todo.length || g.history().length >= 22) break;
         const fen = g.fen();
         let next = tokens[0];
@@ -158,7 +164,7 @@ function pending(g, setup, played, color) {
           uci = uciOf(mv); plan = next.text;
           if (defLegal) {
             const j = await judge(fen, def.uci);
-            if (!bad(j)) { console.error(`UNNEEDED ${name}: change to ${mv.san}, but setup move ${def.san} is fine (loss ${j.loss}, eval ${j.mine})`); warnings++; }
+            if (!bad(j) && !next.planned) { console.error(`UNNEEDED ${name}: change to ${mv.san}, but setup move ${def.san} is fine (loss ${j.loss}, eval ${j.mine})`); warnings++; }
           }
           const jc = await judge(fen, uci);
           if (bad(jc)) { console.error(`ERROR ${name}: change of plan ${mv.san} itself loses ${jc.loss} (eval ${jc.mine}); engine prefers ${jc.bestSan}  ${fen}`); errors++; }
@@ -234,7 +240,7 @@ function pending(g, setup, played, color) {
 
   console.error(`${errors} errors, ${warnings} warnings`);
   if (errors) process.exit(1);
-  const out = { openings: OPENINGS, setup: SETUP, plans: PLANS, lines, trees: roots };
+  const out = { openings: OPENINGS, setup: SETUP, plans: PLANS, tips: TIPS || {}, lines, trees: roots };
   fs.writeFileSync(path.join(__dirname, '../data/simulator.json'), JSON.stringify(out));
   console.error('wrote data/simulator.json');
 })();

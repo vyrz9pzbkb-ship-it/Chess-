@@ -272,8 +272,8 @@ function finishBook() {
 
 /* ---------------- play-on phase ---------------- */
 function renderPlans() {
-  const fam = familyOfLine || (openingId === 'london' ? 'london' : 'caro');
-  const names = { london: 'London System', caro: 'Caro-Kann', blacklondon: 'London setup as Black' };
+  const fam = familyOfLine || openingId;
+  const names = { london: 'London System', ruy: 'Ruy Lopez', caro: 'Caro-Kann', blacklondon: 'London setup as Black' };
   $('#plans-name').textContent = names[fam];
   $('#plans-list').replaceChildren(...data.plans[fam].map(p => el('li', {}, el('b', {}, p.title), el('span', {}, p.text))));
   $('#plans').classList.remove('hidden');
@@ -391,6 +391,9 @@ function startLearn() {
     }
   })(data.trees[openingId]);
   $('#learn-changes').replaceChildren(...examples.map(c => el('li', {}, el('b', {}, c.m + ': '), why(c))));
+  const tips = (data.tips || {})[openingId] || [];
+  $('#learn-tips-wrap').classList.toggle('hidden', !tips.length);
+  $('#learn-tips').replaceChildren(...tips.map(t => { const [head, ...rest] = t.split(': '); return el('li', {}, el('b', {}, head + ': '), rest.join(': ')); }));
   board.setOrientation(side);
   showLearn(0);
 }

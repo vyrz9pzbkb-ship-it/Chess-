@@ -1,7 +1,7 @@
 import { Board, ARROW, uciToMove, moveToUci, uciToSan } from './board.js';
 import { Engine, formatScore } from './engine.js';
 import { BOT_ELOS, botConfig } from './levels.js';
-import { loadBook, bookMove } from './book.js';
+import { loadBook, bookMove, openingFor } from './book.js';
 import { reviewGame } from './review.js';
 import { mountReview } from './review-ui.js';
 import * as store from './storage.js';
@@ -16,6 +16,7 @@ let game = new Chess();
 let elo = BOT_ELOS.includes(settings.botElo) ? settings.botElo : 800;
 let colorChoice = settings.botColor || 'w';
 let tcChoice = settings.botTc || '0';
+let practice = settings.botPractice === 'ruy' ? 'ruy' : 'london';   // White's opening to practise
 let userColor = 'w';
 let token = 0;           // bumps on undo/new game to discard stale engine answers
 let thinking = false;
@@ -31,6 +32,13 @@ let reviewToken = 0;
 function renderSetup() {
   $$('#color-seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.color === colorChoice)));
   $$('#tc-seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tc === tcChoice)));
+  $$('#practice-seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.practice === practice)));
+  $('#practice-field').classList.toggle('hidden', colorChoice === 'b');
+  $('#practice-note').textContent = colorChoice === 'b'
+    ? 'As Black the bot usually opens 1.e4 so you can play the Caro-Kann.'
+    : practice === 'ruy'
+      ? 'As White the bot usually answers 1.e4 with 1...e5 and 2...Nc6, so you reach the Ruy Lopez.'
+      : 'As White the bot usually meets 1.d4 with normal London replies.';
   $('#levels').replaceChildren(...BOT_ELOS.map(e => el('button', {
     'aria-pressed': String(e === elo),
     onclick: () => { elo = e; settings.botElo = e; store.save('settings', settings); renderSetup(); },
@@ -40,6 +48,9 @@ function renderSetup() {
 }
 $$('#color-seg button').forEach(b => b.addEventListener('click', () => {
   colorChoice = b.dataset.color; settings.botColor = colorChoice; store.save('settings', settings); renderSetup();
+}));
+$$('#practice-seg button').forEach(b => b.addEventListener('click', () => {
+  practice = b.dataset.practice; settings.botPractice = practice; store.save('settings', settings); renderSetup();
 }));
 $$('#tc-seg button').forEach(b => b.addEventListener('click', () => {
   tcChoice = b.dataset.tc; settings.botTc = tcChoice; store.save('settings', settings); renderSetup();
@@ -112,6 +123,7 @@ async function startGame(opts = {}) {
   hints = opts.hints || 0; undos = opts.undos || 0;
   userClocks = opts.clocks || [];
   useBook = opts.useBook ?? Math.random() < 0.85;
+  if (opts.practice) practice = opts.practice;
   for (const san of opts.moves || []) game.move(san);
   $('#setup').classList.add('hidden');
   $('#game').classList.remove('hidden');
@@ -119,7 +131,8 @@ async function startGame(opts = {}) {
   $('#review').classList.add('hidden');
   $('#moves-panel').classList.remove('hidden');
   const tc = opts.tc ?? tcChoice;
-  $('#game-meta').textContent = `You play ${userColor === 'w' ? 'White' : 'Black'} vs the bot (~${elo})${tc && tc !== '0' ? ' · ' + tc : ''}`;
+  const opName = book ? book.openings[openingFor(userColor, practice)].name : '';
+  $('#game-meta').textContent = `You play ${userColor === 'w' ? 'White' : 'Black'} vs the bot (~${elo})${tc && tc !== '0' ? ' · ' + tc : ''}${opName ? ' · practising the ' + opName : ''}`;
   $('#clock-top-name').textContent = `Bot (${elo})`;
   await board.setOrientation(userColor);
   await board.sync(game, false);
@@ -156,7 +169,7 @@ async function botMove() {
   setStatus('Bot is thinking…', 'turn-' + game.turn());
   const cfg = botConfig(elo);
   const started = performance.now();
-  let uci = useBook ? bookMove(book, game.history(), userColor) : null;
+  let uci = useBook ? bookMove(book, game.history(), userColor, practice) : null;
   if (!uci) {
     const legal = game.moves({ verbose: true });
     if (Math.random() < cfg.random) uci = moveToUci(legal[Math.floor(Math.random() * legal.length)]);
@@ -208,7 +221,7 @@ function endGame(res, reason, text) {
   updateButtons();
   $('#game-buttons').classList.add('hidden');
   const record = {
-    id: 'g' + Date.now(), at: Date.now(), userColor, elo, tc: clock ? clock.tc : null,
+    id: 'g' + Date.now(), at: Date.now(), userColor, elo, tc: clock ? clock.tc : null, opening: openingFor(userColor, practice),
     result: res, reason: REASON_TEXT[reason] || reason, moves: game.history(),
     clocks: userClocks.slice(0, game.history().length), hints, undos, review: null,
   };
@@ -316,7 +329,7 @@ function renderMoves() {
 function saveCurrent() {
   if (over) return;
   settings.current = {
-    elo, color: userColor, moves: game.history(), hints, undos, useBook, clocks: userClocks,
+    elo, color: userColor, moves: game.history(), hints, undos, useBook, clocks: userClocks, practice,
     tc: clock ? clock.tc : '0', clock: clock ? { w: Math.round(timeLeft('w')), b: Math.round(timeLeft('b')) } : null,
   };
   store.save('settings', settings);
@@ -351,6 +364,6 @@ renderSetup();
 renderMoves();
 if (settings.current && settings.current.moves) {
   const c = settings.current;
-  startGame({ elo: c.elo, color: c.color, moves: c.moves, hints: c.hints, undos: c.undos, useBook: c.useBook, clocks: c.clocks, tc: c.tc, clock: c.clock });
+  startGame({ elo: c.elo, color: c.color, moves: c.moves, hints: c.hints, undos: c.undos, useBook: c.useBook, clocks: c.clocks, tc: c.tc, clock: c.clock, practice: c.practice });
   toast('Resumed your unfinished game.');
 }

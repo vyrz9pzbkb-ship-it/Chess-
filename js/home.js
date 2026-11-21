@@ -30,4 +30,4 @@ const sim = store.load('sim', store.SIM_DEFAULTS);
 const simTot = Object.values(sim.openings).reduce((a, o) => ({ m: a.m + o.moves, c: a.c + o.correct }), { m: 0, c: 0 });
 $('#meta-sim').textContent = simTot.m
   ? `${Math.round((100 * simTot.c) / simTot.m)}% accuracy · ${Object.keys(sim.lines).length} line${Object.keys(sim.lines).length === 1 ? "" : "s"} seen`
-  : '39 lines · London and Caro-Kann';
+  : '46 lines · London, Ruy Lopez and Caro-Kann';

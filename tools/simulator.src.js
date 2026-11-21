@@ -18,6 +18,10 @@ exports.OPENINGS = {
     name: 'Caro-Kann', side: 'b',
     blurb: 'You play Black and always build the same setup: ...c6, ...d5, ...Bf5, ...e6, ...Nf6, ...Nbd7, ...Bd6, ...O-O, against 1.e4 and everything else.',
   },
+  ruy: {
+    name: 'Ruy Lopez', side: 'w',
+    blurb: 'You play White and always build the same setup: e4, Nf3, Bb5, (Ba4 if ...a6), O-O, Re1, (Bb3 if ...b5), c3, h3, d4.',
+  },
 };
 
 // The fixed move order. `uci` identifies the move; `why` is shown in Learn mode
@@ -45,6 +49,28 @@ exports.SETUP = {
   ],
 };
 
+exports.SETUP.ruy = [
+  { uci: 'e2e4', san: 'e4', why: 'Take the centre and open lines for your queen and bishop.' },
+  { uci: 'g1f3', san: 'Nf3', why: 'Develop the knight and attack Black\'s e5 pawn.' },
+  { uci: 'f1b5', san: 'Bb5', why: 'The Spanish bishop puts pressure on the knight that defends e5.' },
+  { uci: 'b5a4', san: 'Ba4', piece: 'b', when: 'attacked', why: 'Only if Black plays ...a6: keep the bishop and the pressure by stepping back to a4.' },
+  { uci: 'e1g1', san: 'O-O', why: 'Castle early: your king is safe and the rook joins the game.' },
+  { uci: 'f1e1', san: 'Re1', piece: 'r', why: 'The rook defends e4 and supports the d4 push later.' },
+  { uci: 'a4b3', san: 'Bb3', piece: 'b', when: 'attacked', why: 'Only if Black plays ...b5: drop the bishop to b3, where it aims at f7.' },
+  { uci: 'c2c3', san: 'c3', why: 'c3 prepares d4 and gives your bishop a retreat square on c2.' },
+  { uci: 'h2h3', san: 'h3', why: 'h3 stops ...Bg4 pinning your knight, so d4 can come safely.' },
+  { uci: 'd2d4', san: 'd4', why: 'Now push d4: your centre is built and the setup is complete.' },
+];
+
+// Short warnings shown in Learn mode.
+exports.TIPS = {
+  ruy: [
+    'Pawn grab: after 3...a6, Bxc6 dxc6 Nxe5? does NOT win a pawn, because ...Qd4 hits the knight and e4 and Black takes the pawn back.',
+    'Noah\'s Ark trap: after ...b5, Black can play ...c5 and ...c4 to trap a bishop on b3. Play c3 in time so it can drop back to c2.',
+    'Berlin: if Black takes on e4 with ...Nxe4, Re1 attacks the knight and you win the pawn back.',
+  ],
+};
+
 exports.PLANS = {
   london: [
     { title: 'Knight to e5, then attack', text: 'Put a knight on e5 (supported by d4 and often f4), then bring the queen to f3 or h5 and push g4-g5 against the black king.' },
@@ -55,6 +81,11 @@ exports.PLANS = {
     { title: 'Break with ...c5', text: 'Your pawn chain points to the queenside. Hit White\'s centre with ...c5 (supported by ...Nc6 and ...Qb6) to attack d4.' },
     { title: 'Minority attack or ...b5-b4', text: 'If White castles queenside or plays c3, roll your b-pawn forward to open lines on the queenside.' },
     { title: 'Good bishop, safe king', text: 'Your light-squared bishop is outside the pawn chain. Keep the position closed, castle short, and trade into an endgame where your structure is better.' },
+  ],
+  ruy: [
+    { title: 'Hold the centre with d4', text: 'With c3 and d4 you get two pawns in the middle. Keep them there: if Black hits e4 or d4, defend rather than trade.' },
+    { title: 'Knight tour Nbd2-f1-g3', text: 'Your b1 knight goes d2, f1 and g3 (or e3), then to f5 or h5 to attack the black king. Your bishop on b3 or c2 helps.' },
+    { title: 'Queenside play with a4', text: 'If Black has played ...b5, a4 attacks that pawn and opens the a-file for your rook.' },
   ],
   blacklondon: [
     { title: 'Knight to e4', text: 'Your setup mirrors the London. Put a knight on e4 (backed by ...f5 if needed), then ...Qf6 or ...Qh4 and ...g5 against a kingside-castled king.' },
@@ -186,4 +217,67 @@ exports.LINES = [
      d4 Bf4 e3 Nf3 Be2 O-O Rc1`],
   ['caro', 'blacklondon', 2, 'Bird Opening (1.f4)', `f4 Nf3 e3 b3 Bb2 Be2 O-O Nh4 Nxf5`],
   ['caro', 'blacklondon', 1, 'Larsen (1.b3)', `b3 Bb2 e3 Nf3 Be2 O-O d3 Nbd2`],
+  /* ======================= Ruy Lopez (you are White) ======================= */
+  ['ruy', 'ruy', 5, 'Main line (3...a6, ...b5, ...d6)',
+    `e5 Nc6 a6 {! ...a6 attacks your bishop. Note: Bxc6 dxc6 Nxe5? does NOT win a pawn, because ...Qd4 hits the knight and e4.}
+     Nf6 Be7 b5 {! ...b5 attacks your bishop again.} d6 O-O Na5 {! ...Na5 attacks your bishop on b3. Carry on with d4: if ...Nxb3, recapture with axb3.}`],
+  ['ruy', 'ruy', 3, 'Noah\'s Ark danger (...b5 and ...c5)',
+    `e5 Nc6 a6 {! ...a6 attacks your bishop. Note: Bxc6 dxc6 Nxe5? does NOT win a pawn, because ...Qd4 hits the knight and e4.}
+     d6 b5 {! ...b5 attacks your bishop again.} Na5 {! Noah's Ark alert: ...Na5 hits your bishop, and ...c5-c4 could trap it on b3.}
+     >>c3{Change of plan: Noah's Ark danger. Black threatens ...c5 and ...c4 to trap your bishop on b3, so play c3 now: the bishop can then escape to c2.}
+     c5 {! ...c5 prepares ...c4. Thanks to c3, your bishop can retreat to c2.}
+     c4 {! ...c4 attacks your bishop: it is NOT trapped, because c3 freed the c2 square.}`],
+  ['ruy', 'ruy', 3, 'Berlin Defence (3...Nf6)',
+    `e5 Nc6 Nf6 {! The Berlin: Black attacks your e4 pawn.}
+     Nxe4 {! Black took your e4 pawn. Re1 attacks the knight, and you win the pawn back.}
+     Nd6 {! The knight left e4. Now the e5 pawn is weak: win your pawn back.}
+     >>Nxe5{Change of plan: this is the point of Re1: take back the pawn with Nxe5. Material is level again.}
+     Be7`],
+  ['ruy', 'ruy', 2, 'Bird Defence (3...Nd4)',
+    `e5 Nc6 Nd4 {! ...Nd4 offers a knight trade.}
+     >>Nxd4{Change of plan: against ...Nd4, take the knight with Nxd4. After ...exd4 Black's pawn on d4 is weak and you castle next.}
+     exd4 c6 {! ...c6 attacks your bishop.} Nf6`],
+  ['ruy', 'ruy', 3, 'Classical Defence (3...Bc5)',
+    `e5 Nc6 Bc5 {! The Classical: Black's bishop aims at f2.}
+     >>c3{Change of plan: against ...Bc5, play c3 now (a setup move played early) to prepare d4, which will kick the bishop.}
+     Nf6 O-O
+     >>d4{Change of plan: you are castled, so strike now with d4, hitting the bishop on c5.}
+     Bb6`],
+  ['ruy', 'ruy', 2, 'Steinitz Defence (3...d6)',
+    `e5 Nc6 d6 {! Black defends e5 with a pawn.}
+     >>d4{Change of plan: against ...d6, push d4 at once (a setup move played early): Black's position is passive and you take the centre.}
+     Bd7 Nf6 Be7`],
+  ['ruy', 'ruy', 2, 'Schliemann Gambit (3...f5)',
+    `e5 Nc6 f5 {! The Schliemann: Black attacks your e4 pawn with a gambit.}
+     >>Nc3{Change of plan: against ...f5, play Nc3 to defend e4 and develop. Don't grab pawns too early.}
+     fxe4 d5`],
+  ['ruy', 'ruy', 1, 'Beginner move 3...Nge7', `e5 Nc6 Nge7 d6 g6 Bg7`],
+  ['ruy', 'ruy', 1, 'Beginner move 3...g6', `e5 Nc6 g6 Bg7 Nge7 O-O`],
+  ['ruy', 'ruy', 1, 'Beginner move 3...Qf6', `e5 Nc6 Qf6 {! The queen comes out early. Keep developing: it will be a target.} Nge7 h6`],
+  ['ruy', 'ruy', 1, 'Beginner move 3...h6', `e5 Nc6 h6 Nf6 d6 Be7`],
+  ['ruy', 'ruy', 2, 'Petrov Defence (2...Nf6)',
+    `e5 Nf6 {! The Petrov: Black attacks e4 instead of defending e5.}
+     >>Nxe5{Change of plan: against the Petrov, take on e5 first; Bb5 would let Black take your e4 pawn for free.}
+     d6 {! ...d6 attacks your knight on e5.}
+     >Nf3{Change of plan: your knight is attacked, so drop it back to f3. Don't play Nxf7?, it loses a piece.}
+     Nxe4 {! Black took back the pawn on e4.}
+     >>d4{Change of plan: take the centre with d4 (a setup move played early), then develop and castle.}`],
+  ['ruy', 'ruy', 2, 'Philidor Defence (2...d6)',
+    `e5 d6 {! The Philidor: Black defends e5 with a pawn.}
+     >>d4{Change of plan: against ...d6, push d4 at once and open the centre.}
+     exd4 {! Black took your d4 pawn.}
+     >>Nxd4{Change of plan: Black took on d4, so recapture with Nxd4; your knight stands well in the centre.}
+     Nf6 {! ...Nf6 attacks your e4 pawn.}
+     >>Nc3{Change of plan: ...Nf6 attacks e4, so defend it with Nc3 before anything else.}
+     Be7`],
+  ['ruy', 'ruy', 2, 'Sicilian (1...c5)',
+    `c5 {! Not 1...e5: there is no knight on c6 to pin yet.} Nc6 g6 Bg7`],
+  ['ruy', 'ruy', 1, 'Caro-Kann (1...c6)',
+    `c6 {! Not 1...e5: Black prepares ...d5.} d5 {! ...d5 attacks your e4 pawn.}
+     >>e5{Change of plan: against 1...c6 your bishop has no knight to pin on b5, and ...d5 attacks e4. Push e5 to gain space, then just develop and castle.}
+     Bf5 >>d4{Take the centre with d4.} e6 >>Be2{Develop the bishop to e2 so you can castle (on b5 it would run into the c6 pawn).} c5`],
+  ['ruy', 'ruy', 1, 'French (1...e6)',
+    `e6 {! Not 1...e5: Black prepares ...d5.} d5 {! ...d5 attacks your e4 pawn.}
+     >>exd5{Change of plan: against the French your bishop has no knight to pin on b5, and ...d5 attacks e4. Trade on d5 and just develop.}
+     exd5 >>d4{Take the centre with d4.} Nf6 >>Bd3{Develop the bishop to d3, aiming at h7; then castle.} Bd6`],
 ];

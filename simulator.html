@@ -29,6 +29,7 @@
           <h3>Opening Simulator</h3>
           <div class="seg" role="group" aria-label="Opening" id="opening-seg">
             <button data-op="london" aria-pressed="true">London (White)</button>
+            <button data-op="ruy" aria-pressed="false">Ruy Lopez (White)</button>
             <button data-op="caro" aria-pressed="false">Caro-Kann (Black)</button>
           </div>
           <p class="small muted" id="op-blurb" style="margin:10px 0 12px">&nbsp;</p>
@@ -53,6 +54,10 @@
             <button class="btn primary" id="learn-next" aria-label="Next move">&#9654;</button>
           </div>
           <ol class="setup-list" id="learn-list"></ol>
+          <div id="learn-tips-wrap" class="hidden">
+            <h3 style="margin-top:16px">Watch out for</h3>
+            <ul class="plan-examples" id="learn-tips"></ul>
+          </div>
           <h3 style="margin-top:16px">When the plan changes</h3>
           <ul class="plan-examples" id="learn-changes"></ul>
           <div class="btn-row" style="margin-top:12px">

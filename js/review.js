@@ -2,7 +2,7 @@
 // accuracy, opening check and the three main lessons. Pure logic, no DOM.
 import { explainMove, VALUE, NAME } from './explain.js';
 import { scoreToCp } from './engine.js';
-import { openingCheck } from './book.js';
+import { openingCheck, openingFor } from './book.js';
 
 export const REVIEW_VERSION = 1;
 export const REVIEW_DEPTH = 15;
@@ -91,7 +91,7 @@ export function explainMistake(Chess, fen, played, afterLine, label, best) {
 
 /**
  * Analyse a finished game.
- * game: {moves: [SAN], userColor}
+ * game: {moves: [SAN], userColor, opening ('london' | 'ruy' | 'caro')}
  * returns the review object stored with the game.
  */
 export async function reviewGame(engine, Chess, game, simData, onProgress = () => {}, isCancelled = () => false) {
@@ -151,7 +151,7 @@ export async function reviewGame(engine, Chess, game, simData, onProgress = () =
   moves.filter(x => x.mine).forEach(x => { counts[x.label]++; });
   const accuracy = accs.length ? Math.round(accs.reduce((a, b) => a + b, 0) / accs.length) : null;
   const evalSeries = evals.map((e, i) => (i % 2 === 0 ? e.cp : -e.cp));     // White's view
-  const opening = simData ? openingCheck(simData, verbose, game.userColor, Chess) : null;
+  const opening = simData ? openingCheck(simData, verbose, game.userColor, Chess, game.opening || openingFor(game.userColor)) : null;
   const lessons = buildLessons(moves, counts, accuracy, opening, game);
 
   return { version: REVIEW_VERSION, depth: REVIEW_DEPTH, accuracy, counts, moves, evalSeries, opening, lessons };

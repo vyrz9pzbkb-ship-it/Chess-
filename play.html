@@ -52,7 +52,13 @@
               <button data-tc="15+10" aria-pressed="false">15+10</button>
             </div>
           </label>
-          <p class="small muted">As White the bot usually meets 1.d4 with normal London replies; as Black it usually opens 1.e4 so you can play the Caro-Kann.</p>
+          <label class="field" id="practice-field"><span>Practise as White</span>
+            <div class="seg" role="group" aria-label="Opening to practise" id="practice-seg">
+              <button data-practice="london" aria-pressed="true">London</button>
+              <button data-practice="ruy" aria-pressed="false">Ruy Lopez</button>
+            </div>
+          </label>
+          <p class="small muted" id="practice-note"></p>
           <button class="btn primary" id="btn-start" style="width:100%">Start game</button>
           <p class="small" style="margin:10px 0 0"><a href="history.html">Your games and reviews →</a></p>
         </div>
